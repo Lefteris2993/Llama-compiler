@@ -1,1 +1,11 @@
 let main = print_string "hello world!\n"
+
+(* comment!!!
+
+  (* more comment *)
+
+  after more comment;
+
+ *)
+
+let usefulFunc = return 42
