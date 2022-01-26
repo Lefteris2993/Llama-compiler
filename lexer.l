@@ -73,6 +73,7 @@ E    \\[ntr0\\\'\"]
 
 [\=\|\+\-\*\/\!\;\<\>\(\)\[\]\,\:]  { return yytext[0]; }
 {D}+                { return T_const_int; }
+{D}+\.{D}+([eE][\+\-]?{D}+)? { return T_const_float ;}
 \"([^\n"])*\"        { return T_const_string; } 
 \'([^\'\\\"]|{E})\' { return T_const_char; }
 {LO}(_|{L}|{D})*    { return T_id; }

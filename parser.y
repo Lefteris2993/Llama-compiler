@@ -4,6 +4,8 @@
 #include <cstdlib>
 %}
 
+%define parse.error verbose
+
 %token  T_and   	              "and"
 %token  T_array   	            "array"
 %token  T_begin   	            "begin"
@@ -55,6 +57,7 @@
 %token  T_set                   ":="
 
 %token  T_const_int
+%token  T_const_float
 %token  T_const_string
 %token  T_const_char
 %token  T_constructor
@@ -72,7 +75,7 @@
 %left '+' '-' "+." "-."
 %left '*' '/' "*." "/." "mod"
 %right "**"
-%nonassoc "not" "delete"
+%nonassoc "not" "delete" INT_POS_SIGN INT_NEG_SIGN FLOAT_POS_SIGN FLOAT_NEG_SIGN
 %nonassoc '!'
 %nonassoc "new"
 
@@ -122,12 +125,12 @@ comma_expr_list:
 ;
 
 typedef:
-  "type" tdef typedef_list
+  "type" typedef_list
 ;
 
 typedef_list:
   tdef
-| "and" tdef typedef_list
+| tdef "and" typedef_list
 ;
 
 tdef:
@@ -136,7 +139,7 @@ tdef:
 
 constr_list:
   constr
-| '|' constr constr_list
+| constr '|' constr_list
 ;
 
 constr:
@@ -172,36 +175,68 @@ star_list:
 | '*' ',' star_list
 ;
 
-expr:
-  T_const_int
+expr: 
+  "not" expr
+| '+' expr %prec INT_POS_SIGN
+| '-' expr %prec INT_NEG_SIGN
+| "+." expr %prec FLOAT_POS_SIGN
+| "-." expr %prec FLOAT_NEG_SIGN
+| expr '+' expr
+| expr '-' expr
+| expr '*' expr
+| expr '/' expr
+| expr "mod" expr
+| expr "+." expr
+| expr "-." expr
+| expr "*." expr
+| expr "/." expr
+| expr "**" expr
+| expr '=' expr
+| expr "<>" expr
+| expr '<' expr
+| expr '>' expr
+| expr "<=" expr
+| expr ">=" expr
+| expr "==" expr
+| expr "!=" expr
+| expr "&&" expr
+| expr "||" expr
+| expr ":=" expr
+| expr ';' expr
+| letdef "in" expr
+| "while" expr "do" expr "done"
+| "for" T_id '=' expr "to" expr "do" expr "done"
+| "for" T_id '=' expr "downto" expr "do" expr "done"
+| "dim" T_id
+| "dim" T_const_int T_id
+| "new" type
+| "delete" expr
+| T_id expr_high_list
+| "constructor" expr_high_list
+| "if" expr "then" expr
+| "if" expr "then" expr "else" expr
+| "begin" expr "end"
+| "match" expr "with" clause_list "end"
+| expr_high
+;
+
+expr_high: 
+  '!' expr_high
+| '(' expr ')'
+| '(' ')'
+| T_const_int
+| T_const_float
 | T_const_char
 | T_const_string
 | "true"
 | "false"
-| '(' ')'
-| '(' expr ')'
-| unop expr
-| expr binop expr
-| T_id expr_list
-| T_constructor expr_list
+| T_id
 | T_id '[' comma_expr_list ']'
-| "dim" T_const_int T_id
-| "dim" T_id
-| "new" type
-| "delete" expr
-| letdef "in" expr
-| "begin" expr "end"
-| "if" expr "then" expr
-| "if" expr "then" expr "else" expr
-| "while" expr "do" expr "done"
-| "for" T_id '=' expr "to" expr "do" expr "done"
-| "for" T_id '=' expr "downto" expr "do" expr "done"
-| "match" expr "with" clause_list "end"
+| T_constructor
 ;
 
-expr_list:
-  /* nothing */
-| expr expr_list
+expr_high_list: expr_high
+  | expr_high expr_high_list
 ;
 
 clause_list:
@@ -209,58 +244,32 @@ clause_list:
 | clause '|' clause_list
 ;
 
-unop:
-  '+'
-| '-'
-| "+."
-| "-."
-| '!'
-| "not"
-;
-
-binop:
-  '+'
-| '-'
-| '*'
-| '/'
-| "+."
-| "-."
-| "*."
-| "/."
-| "mod"
-| "**"
-| '='
-| "<>"
-| '<'
-| '>'
-| "<="
-| ">="
-| "=="
-| "!="
-| "&&"
-| "||"
-| ';'
-| ":="
-;
-
 clause:
   pattern "->" expr
 ;
 
 pattern:
-  '+' T_const_int
-| '-' T_const_int
+  pattern_high
+| T_constructor pattern_high_list
+;
+
+pattern_high:
+  '+' T_const_int %prec INT_POS_SIGN
+| '-' T_const_int %prec INT_NEG_SIGN
+| T_const_int
 | T_const_char
+| "+." T_const_float %prec FLOAT_POS_SIGN
+| "-." T_const_float %prec FLOAT_NEG_SIGN
+| T_const_float
 | "true"
 | "false"
 | T_id
 | '(' pattern ')'
-| T_constructor pattern_list
 ;
 
-pattern_list:
+pattern_high_list:
   /* nothing */
-| pattern_list pattern
+| pattern_high pattern_high_list
 ;
 
 %%
