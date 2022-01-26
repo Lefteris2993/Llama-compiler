@@ -1,2 +1,7 @@
 .vscode
-lexer.cpp
+lexer.cpp 
+parser.cpp 
+parser.hpp 
+parser.output 
+*.o
+Llama
