@@ -1,7 +1,9 @@
-%option noyywrap
 %{
+#include "ast.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
+#include <string>
+#include <cstdlib>
 
 #define   T_eof                     0
 
@@ -17,6 +19,7 @@ UP    [A-Z]
 L     {LO}|{UP}
 E    \\[ntr0\\\'\"]
 
+%option noyywrap
 
 %x COMMENT 
 %%
@@ -66,9 +69,9 @@ E    \\[ntr0\\\'\"]
 
 [\=\|\+\-\*\/\!\;\<\>\(\)\[\]\,\:]  { return yytext[0]; }
 {D}+                { return T_const_int; }
-\"([^\n"])*\"        { return T_const_string; } 
+\"([^\n"])*\"        { std::string str(yytext); yylval.var = str; return T_const_string; } 
 \'([^\'\\\"]|{E})\' { return T_const_char; }
-{LO}(_|{L}|{D})*    { return T_id; }
+{LO}(_|{L}|{D})*    { std::string str(yytext); yylval.var = str; return T_id; }
 %[^\n]*\n           { line_number = line_number + 1 ;}
 
 \-\-.*              { /* ignore the rest of the line */ }

@@ -8,4 +8,4 @@ let main = print_string "hello world!\n"
 
  *)
 
-let usefulFunc = return 42
+-- let usefulFunc = return 42

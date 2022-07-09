@@ -1,7 +1,10 @@
 %{
-#include "lexer.hpp"
 #include <cstdio>
 #include <cstdlib>
+#include <iostream>
+#include <string>
+#include "ast.hpp"
+#include "lexer.hpp"
 %}
 
 %define parse.error verbose
@@ -50,9 +53,9 @@
 %token  T_set                   ":="
 
 %token  T_const_int
-%token  T_const_string
+%token<var>  T_const_string
 %token  T_const_char
-%token  T_id
+%token<var>  T_id
 
 
 %nonassoc "let" "in"
@@ -73,31 +76,55 @@
 %nonassoc "of"
 %nonassoc "ref"
 
+%union {
+  Stmt *stmt;
+  Expr *expr;
+  LetDef *letdef;
+  DefBlock *defBlock;
+  StmtBlock *stmtBlock;
+  Def *def;
+  HighPrioExpr *exprHigh;
+  HighPrioExprBlock *exprHighBlock;
+
+  std::string var;
+
+}
+
+%type<expr> expr
+%type<stmtBlock> stmt_list
+%type<def> def
+%type<letdef> letdef
+%type<defBlock> def_list
+%type<exprHigh> expr_high
+%type<exprHighBlock> expr_high_list
+
 %%
 
 program:
-  stmt_list { printf("0\n"); }
+  stmt_list { 
+    std::cout << "AST:" << *$1 << std::endl;
+   }
 ;
 
 stmt_list:
-  /* nothing */ { printf("1\n"); }
-| letdef stmt_list { printf("2\n"); }
+  /* nothing */ { $$ = new StmtBlock(); }
+| stmt_list letdef { $1->append($2); $$ = $1; }
 ;
 
 letdef:
-  "let" def_list
-| "let" "rec" def_list
+  "let" def_list { $$ = new LetDef($2, false); }
+| "let" "rec" def_list { $$ = new LetDef($3, true); }
 ;
 
 def_list:
-  def
-| def "and" def_list
+  def { DefBlock d = new DefBlock(); d.append($1); $$ = d; }
+| def_list "and" def { $1->append($3); $$ = $1; }
 ;
 
 def:
-  T_id par_list '=' expr
+  T_id par_list '=' expr { $$ = new ImmutableDef($1, $4);  }
 | T_id par_list ':' type '=' expr
-| "mutable" T_id
+| "mutable" T_id { $$ = new MutableDef($2); }
 | "mutable" T_id ':' type
 | "mutable" T_id '[' comma_expr_list ']'
 | "mutable" T_id '[' comma_expr_list ']' ':' type
@@ -177,7 +204,7 @@ expr_high:
 | '(' ')'
 | T_const_int
 | T_const_char
-| T_const_string
+| T_const_string { $$ = $1 }
 | "true"
 | "false"
 | T_id
@@ -185,8 +212,8 @@ expr_high:
 ;
 
 expr_high_list: 
-  expr_high
-| expr_high expr_high_list
+  expr_high { HighPrioExprBlock d = new HighPrioExprBlock(); d.append($1); $$ = d; }
+| expr_high_list expr_high { $1->append($2); $$ = $1; }
 ;
 
 clause_list:
