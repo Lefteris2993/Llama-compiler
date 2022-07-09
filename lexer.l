@@ -34,7 +34,6 @@ E    \\[ntr0\\\'\"]
 "else"          { return T_else; }
 "end"           { return T_end; }
 "false"         { return T_false; }
-"float"         { return T_float; }
 "for"           { return T_for; }
 "if"            { return T_if; }
 "in"            { return T_in; }
@@ -51,17 +50,11 @@ E    \\[ntr0\\\'\"]
 "then"          { return T_then; }
 "to"            { return T_to; }
 "true"          { return T_true; }
-"type"          { return T_type; }
 "unit"          { return T_unit; }
 "while"         { return T_while; }
 "with"          { return T_with; }
 
 "->"            { return T_arrow; }
-"+."            { return T_plus_dot; }
-"-."            { return T_minus_dot; }
-"*."            { return T_star_dot; }
-"/."            { return T_slash_dot; }
-"**"            { return T_double_star; }
 "&&"            { return T_double_ampersand; }
 "||"            { return T_double_vertical_line; }
 "<>"            { return T_diff; }
@@ -73,11 +66,9 @@ E    \\[ntr0\\\'\"]
 
 [\=\|\+\-\*\/\!\;\<\>\(\)\[\]\,\:]  { return yytext[0]; }
 {D}+                { return T_const_int; }
-{D}+\.{D}+([eE][\+\-]?{D}+)? { return T_const_float ;}
 \"([^\n"])*\"        { return T_const_string; } 
 \'([^\'\\\"]|{E})\' { return T_const_char; }
 {LO}(_|{L}|{D})*    { return T_id; }
-{UP}(_|{L}|{D})*    { return T_constructor; }
 %[^\n]*\n           { line_number = line_number + 1 ;}
 
 \-\-.*              { /* ignore the rest of the line */ }

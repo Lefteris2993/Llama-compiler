@@ -19,7 +19,6 @@
 %token  T_else   	              "else"
 %token  T_end   	              "end"
 %token  T_false   	            "false"
-%token  T_float   	            "float"
 %token  T_for   	              "for"
 %token  T_if   	                "if"
 %token  T_in   	                "in"
@@ -36,17 +35,11 @@
 %token  T_then                  "then"
 %token  T_to   	                "to"
 %token  T_true   	              "true"
-%token  T_type    	            "type"
 %token  T_unit   	              "unit"
 %token  T_while                 "while"
 %token  T_with	                "with"
 
 %token  T_arrow                 "->"
-%token  T_plus_dot              "+." 
-%token  T_minus_dot             "-."
-%token  T_star_dot              "*."
-%token  T_slash_dot             "/."
-%token  T_double_star           "**"
 %token  T_double_ampersand      "&&"
 %token  T_double_vertical_line  "||"
 %token  T_diff                  "<>"
@@ -57,10 +50,8 @@
 %token  T_set                   ":="
 
 %token  T_const_int
-%token  T_const_float
 %token  T_const_string
 %token  T_const_char
-%token  T_constructor
 %token  T_id
 
 
@@ -72,10 +63,9 @@
 %left "||"
 %left "&&"
 %nonassoc '=' "<>" '>' '<' "<=" ">=" "==" "!="
-%left '+' '-' "+." "-."
-%left '*' '/' "*." "/." "mod"
-%right "**"
-%nonassoc "not" "delete" INT_POS_SIGN INT_NEG_SIGN FLOAT_POS_SIGN FLOAT_NEG_SIGN
+%left '+' '-'
+%left '*' '/' "mod"
+%nonassoc "not" "delete" INT_POS_SIGN INT_NEG_SIGN
 %nonassoc '!'
 %nonassoc "new"
 
@@ -86,13 +76,12 @@
 %%
 
 program:
-  stmt_list
+  stmt_list { printf("0\n"); }
 ;
 
 stmt_list:
-  /* nothing */
-| letdef stmt_list
-| typedef stmt_list
+  /* nothing */ { printf("1\n"); }
+| letdef stmt_list { printf("2\n"); }
 ;
 
 letdef:
@@ -119,42 +108,14 @@ par_list:
 | par par_list
 ;
 
-comma_expr_list:
-  expr
-| expr ',' comma_expr_list
-;
-
-typedef:
-  "type" typedef_list
-;
-
-typedef_list:
-  tdef
-| tdef "and" typedef_list
-;
-
-tdef:
-  T_id '=' constr_list
-;
-
-constr_list:
-  constr
-| constr '|' constr_list
-;
-
-constr:
-  T_constructor
-| T_constructor "of" type_list
-;
-
-type_list:
-  type
-| type type_list
-;
-
 par:
   T_id
 | '(' T_id ':' type ')'
+;
+
+comma_expr_list:
+  expr
+| expr ',' comma_expr_list
 ;
 
 type:
@@ -162,12 +123,10 @@ type:
 | "int"
 | "char"
 | "bool"
-| "float"
 | '(' type ')'
 | type "->" type
 | type "ref"
 | "array" '[' star_list ']' "of" type
-| T_id
 ;
 
 star_list:
@@ -179,18 +138,11 @@ expr:
   "not" expr
 | '+' expr %prec INT_POS_SIGN
 | '-' expr %prec INT_NEG_SIGN
-| "+." expr %prec FLOAT_POS_SIGN
-| "-." expr %prec FLOAT_NEG_SIGN
 | expr '+' expr
 | expr '-' expr
 | expr '*' expr
 | expr '/' expr
 | expr "mod" expr
-| expr "+." expr
-| expr "-." expr
-| expr "*." expr
-| expr "/." expr
-| expr "**" expr
 | expr '=' expr
 | expr "<>" expr
 | expr '<' expr
@@ -212,7 +164,6 @@ expr:
 | "new" type
 | "delete" expr
 | T_id expr_high_list
-| "constructor" expr_high_list
 | "if" expr "then" expr
 | "if" expr "then" expr "else" expr
 | "begin" expr "end"
@@ -225,18 +176,17 @@ expr_high:
 | '(' expr ')'
 | '(' ')'
 | T_const_int
-| T_const_float
 | T_const_char
 | T_const_string
 | "true"
 | "false"
 | T_id
 | T_id '[' comma_expr_list ']'
-| T_constructor
 ;
 
-expr_high_list: expr_high
-  | expr_high expr_high_list
+expr_high_list: 
+  expr_high
+| expr_high expr_high_list
 ;
 
 clause_list:
@@ -249,27 +199,14 @@ clause:
 ;
 
 pattern:
-  pattern_high
-| T_constructor pattern_high_list
-;
-
-pattern_high:
   '+' T_const_int %prec INT_POS_SIGN
 | '-' T_const_int %prec INT_NEG_SIGN
 | T_const_int
 | T_const_char
-| "+." T_const_float %prec FLOAT_POS_SIGN
-| "-." T_const_float %prec FLOAT_NEG_SIGN
-| T_const_float
 | "true"
 | "false"
 | T_id
 | '(' pattern ')'
-;
-
-pattern_high_list:
-  /* nothing */
-| pattern_high pattern_high_list
 ;
 
 %%
