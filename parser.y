@@ -85,9 +85,7 @@
   Def *def;
   HighPrioExpr *exprHigh;
   HighPrioExprBlock *exprHighBlock;
-
-  std::string var;
-
+  std::string *var;
 }
 
 %type<expr> expr
@@ -117,14 +115,14 @@ letdef:
 ;
 
 def_list:
-  def { DefBlock d = new DefBlock(); d.append($1); $$ = d; }
+  def { DefBlock *d = new DefBlock(); d->append($1); $$ = d; }
 | def_list "and" def { $1->append($3); $$ = $1; }
 ;
 
 def:
-  T_id par_list '=' expr { $$ = new ImmutableDef($1, $4);  }
+  T_id par_list '=' expr { $$ = new ImmutableDef(*$1, $4);  }
 | T_id par_list ':' type '=' expr
-| "mutable" T_id { $$ = new MutableDef($2); }
+| "mutable" T_id { $$ = new MutableDef(*$2); }
 | "mutable" T_id ':' type
 | "mutable" T_id '[' comma_expr_list ']'
 | "mutable" T_id '[' comma_expr_list ']' ':' type
@@ -190,7 +188,7 @@ expr:
 | "dim" T_const_int T_id
 | "new" type
 | "delete" expr
-| T_id expr_high_list
+| T_id expr_high_list { $$ = new FunctionCall(*$1, $2); }
 | "if" expr "then" expr
 | "if" expr "then" expr "else" expr
 | "begin" expr "end"
@@ -204,7 +202,7 @@ expr_high:
 | '(' ')'
 | T_const_int
 | T_const_char
-| T_const_string { $$ = $1 }
+| T_const_string { $$ = new HighPrioExpr(*$1); }
 | "true"
 | "false"
 | T_id
@@ -212,7 +210,7 @@ expr_high:
 ;
 
 expr_high_list: 
-  expr_high { HighPrioExprBlock d = new HighPrioExprBlock(); d.append($1); $$ = d; }
+  expr_high { HighPrioExprBlock *d = new HighPrioExprBlock(); d->append($1); $$ = d; }
 | expr_high_list expr_high { $1->append($2); $$ = $1; }
 ;
 
@@ -237,12 +235,6 @@ pattern:
 ;
 
 %%
-
-void yyerror (const char * msg)
-{
-	fprintf(stderr,"error :  %s\n",msg);
-	exit(1);
-}
 
 int main () {
   int result = yyparse();

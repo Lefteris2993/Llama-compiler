@@ -1,3 +1,5 @@
+%option noyywrap
+
 %{
 #include "ast.hpp"
 #include "lexer.hpp"
@@ -18,8 +20,6 @@ LO    [a-z]
 UP    [A-Z]
 L     {LO}|{UP}
 E    \\[ntr0\\\'\"]
-
-%option noyywrap
 
 %x COMMENT 
 %%
@@ -69,9 +69,9 @@ E    \\[ntr0\\\'\"]
 
 [\=\|\+\-\*\/\!\;\<\>\(\)\[\]\,\:]  { return yytext[0]; }
 {D}+                { return T_const_int; }
-\"([^\n"])*\"        { std::string str(yytext); yylval.var = str; return T_const_string; } 
+\"([^\n"])*\"        { yylval.var = new std::string(yytext); return T_const_string; } 
 \'([^\'\\\"]|{E})\' { return T_const_char; }
-{LO}(_|{L}|{D})*    { std::string str(yytext); yylval.var = str; return T_id; }
+{LO}(_|{L}|{D})*    { yylval.var = new std::string(yytext); return T_id; }
 %[^\n]*\n           { line_number = line_number + 1 ;}
 
 \-\-.*              { /* ignore the rest of the line */ }
@@ -90,3 +90,8 @@ E    \\[ntr0\\\'\"]
 .                   { yyerror("illegal character"); }
 
 %%
+
+void yyerror(const char *msg) {
+  fprintf(stderr, "%s\n", msg);
+  exit(1);
+}
