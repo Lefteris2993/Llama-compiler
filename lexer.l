@@ -68,9 +68,9 @@ E    \\[ntr0\\\'\"]
 ":="            { return T_set; }
 
 [\=\|\+\-\*\/\!\;\<\>\(\)\[\]\,\:]  { return yytext[0]; }
-{D}+                { return T_const_int; }
+{D}+                { yylval.num = atoi(yytext); return T_const_int; }
 \"([^\n"])*\"        { yylval.var = new std::string(yytext); return T_const_string; } 
-\'([^\'\\\"]|{E})\' { return T_const_char; }
+\'([^\'\\\"]|{E})\' { yylval.c = yytext[0]; return T_const_char; }
 {LO}(_|{L}|{D})*    { yylval.var = new std::string(yytext); return T_id; }
 %[^\n]*\n           { line_number = line_number + 1 ;}
 

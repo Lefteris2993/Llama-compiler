@@ -1,2 +1,0 @@
-42
-type id_1 = (Contactor_1 of int id_2) (id_3 = Contactor_2)
