@@ -385,7 +385,7 @@ class IntHighPrioExpr: public HighPrioExpr {
 public:
   IntHighPrioExpr(int v): val(v) {}
   virtual void printOn(std::ostream &out) const override {
-    out << "DeRefHighPrioExpr(" << val << ")";
+    out << "IntHighPrioExpr(" << val << ")";
   }
 private:
   int val;
@@ -395,7 +395,7 @@ class CharHighPrioExpr: public HighPrioExpr {
 public:
   CharHighPrioExpr(int v): val(v) {}
   virtual void printOn(std::ostream &out) const override {
-    out << "DeRefHighPrioExpr(" << val << ")";
+    out << "CharHighPrioExpr(" << val << ")";
   }
 private:
   int val;
@@ -405,7 +405,7 @@ class StringHighPrioExpr: public HighPrioExpr {
 public:
   StringHighPrioExpr(std::string s): val(s) {}
   virtual void printOn(std::ostream &out) const override {
-    out << "ExprHigh(" << val << ")";
+    out << "StringHighPrioExpr(" << val << ")";
   }
 private:
   std::string val;
@@ -415,7 +415,7 @@ class BoolHighPrioExpr: public HighPrioExpr {
 public:
   BoolHighPrioExpr(bool v): val(v) {}
   virtual void printOn(std::ostream &out) const override {
-    out << "DeRefHighPrioExpr(" << (val ? "true" : "false") << ")";
+    out << "BoolHighPrioExpr(" << (val ? "true" : "false") << ")";
   }
 private:
   bool val;
@@ -500,7 +500,7 @@ public:
   ): id(i), block(b), type(t) {}
   ~MutableArrayDef() { delete block; delete type; }
   virtual void printOn(std::ostream &out) const override {
-    out << "MutableDef(" << id << "," << *block;
+    out << "MutableArrayDef(" << id << "," << *block;
     if (type != nullptr) out << "," << *type;
     out << ")";
   }
