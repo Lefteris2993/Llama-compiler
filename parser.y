@@ -5,6 +5,11 @@
 #include <string>
 #include "ast.hpp"
 #include "lexer.hpp"
+
+const Type *INT_TYPE = new SimpleType(INT);
+const Type *UNIT_TYPE = new SimpleType(UNIT);
+const Type *CHAR_TYPE = new SimpleType(CHAR);
+const Type *BOOL_TYPE = new SimpleType(BOOL);
 %}
 
 %define parse.error verbose
@@ -119,6 +124,7 @@
 program:
   stmt_list { 
     std::cout << "AST:" << *$1 << std::endl;
+    $1->sem();
    }
 ;
 
@@ -245,7 +251,7 @@ pattern:
   '+' T_const_int %prec INT_POS_SIGN  { $$ = new NumPattern($2); }
 | '-' T_const_int %prec INT_NEG_SIGN  { $$ = new NumPattern($2, true); }
 | T_const_int                         { $$ = new NumPattern($1); }
-| T_const_char                        { $$ = new NumPattern($1); }
+| T_const_char                        { $$ = new CharPattern($1); }
 | "true"                              { $$ = new BoolPattern(true); }
 | "false"                             { $$ = new BoolPattern(false); }
 | T_id                                { $$ = new VarPattern(*$1); }

@@ -5,3 +5,4 @@ parser.hpp
 parser.output 
 *.o
 Llama
+temp

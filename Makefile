@@ -13,10 +13,10 @@ lexer.o: lexer.cpp lexer.hpp parser.hpp ast.hpp
 parser.hpp parser.cpp: parser.y
 	bison -dv -o parser.cpp parser.y
 
-parser.o: parser.cpp lexer.hpp ast.hpp
+parser.o: parser.cpp lexer.hpp ast.hpp symbol.hpp
 
 Llama: lexer.o parser.o
-	$(CXX) $(CXXFLAGS) -o Llama lexer.o parser.o
+	$(CXX) $(CXXFLAGS) -o Llama lexer.o parser.o symbol.cpp
 
 clean:
 	$(RM) lexer.cpp parser.cpp parser.hpp parser.output *.o

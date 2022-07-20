@@ -1,0 +1,5 @@
+let main = 
+  match 42 with
+      0 -> 'a'
+    | 42 -> 42
+  end
