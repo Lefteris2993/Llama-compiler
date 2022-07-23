@@ -68,4 +68,9 @@ private:
   Type *type;
 };
 
+extern Type *intType;
+extern Type *unitType;
+extern Type *charType;
+extern Type *boolType;
+
 #endif

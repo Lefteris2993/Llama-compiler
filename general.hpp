@@ -17,6 +17,7 @@
 #ifndef __GENERAL_HPP__
 #define __GENERAL_HPP__
 
+#include <stdlib.h>
 
 void *allocate (size_t);
 void deallocate (void *);

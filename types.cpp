@@ -56,7 +56,26 @@ TypeClassType Type::getClassType() { return classType; }
 
 SimpleType::SimpleType(BaseType t): type(t) { this->classType = SIMPLE; }
 void SimpleType::printOn(std::ostream &out) const {
-  out << "SimpleType(" << type << ")";
+  out << "SimpleType(";
+  switch (type)
+  {
+  case BaseType::UNIT :
+    out << "UNIT";
+    break;
+  
+  case BaseType::INT :
+    out << "INT";
+    break;
+    
+  case BaseType::CHAR :
+    out << "CHAR";
+    break;
+
+  case BaseType::BOOL :
+    out << "BOOL";
+    break;
+  }
+  out << ")";
 }
 BaseType SimpleType::getType() { return this->type; }
 
@@ -84,3 +103,8 @@ void RefType::printOn(std::ostream &out) const {
   out << "RefType(" << *type << ")";
 }
 Type* RefType::getType() { return this->type; }
+
+Type *intType = new SimpleType(INT);
+Type *unitType = new SimpleType(UNIT);
+Type *charType = new SimpleType(CHAR);
+Type *boolType = new SimpleType(BOOL);

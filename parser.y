@@ -5,13 +5,16 @@
 #include <string>
 #include "ast.hpp"
 #include "lexer.hpp"
+#include "symbol.hpp"
 
-const Type *INT_TYPE = new SimpleType(INT);
-const Type *UNIT_TYPE = new SimpleType(UNIT);
-const Type *CHAR_TYPE = new SimpleType(CHAR);
-const Type *BOOL_TYPE = new SimpleType(BOOL);
+extern Type *intType;
+extern Type *unitType;
+extern Type *charType;
+extern Type *boolType;
 
 extern int yylineno;
+
+SymbolTable *symbolaTable;
 %}
 
 %code requires {
@@ -267,7 +270,9 @@ pattern:
 %%
 
 int main () {
+  symbolaTable = new SymbolTable(42);
+  symbolaTable->openScope();
   int result = yyparse();
-  if (result == 0) printf("Success.\n");
+  delete(symbolaTable);
   return result;
 }

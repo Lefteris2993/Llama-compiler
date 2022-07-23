@@ -7,15 +7,18 @@
 #include "types.hpp"
 #include "lexer.hpp"
 #include "error.hpp"
+#include "symbol.hpp"
 
 enum BinOp { BIN_PLUS, BIN_MINUS, STAR, DIV, MOD, STRUCT_EQ, STRUCT_NE, L, G, LE, GE, EQ, NE, AND, OR, ASS, PAR };
 
 enum SigOp { NOT, SIG_PLUS, SIG_MINUS, EXCL };
 
-extern const Type *INT_TYPE;
-extern const Type *UNIT_TYPE;
-extern const Type *CHAR_TYPE;
-extern const Type *BOOL_TYPE;
+extern Type *intType;
+extern Type *unitType;
+extern Type *charType;
+extern Type *boolType;
+
+extern SymbolTable *symbolaTable;
 
 class AST {
 public:
@@ -56,7 +59,7 @@ public:
   virtual void sem() override {
     for (Expr *c : block) {
       c->sem();
-      if (!Type::equal_types(c->getType(), INT_TYPE)) {
+      if (!Type::equal_types(c->getType(), intType)) {
         Logger::error(c->lineno, "Array dimentions must be of type INT");
       }
     }
@@ -80,7 +83,7 @@ class NumPattern: public Pattern {
 public:
   NumPattern(int n, bool neg = false): num(n), negative(neg) {}
   virtual void sem() override {
-    this->type = new SimpleType(INT);
+    this->type = intType;
   }
   virtual void printOn(std::ostream &out) const override {
     out << "NumPattern(" << (negative ? "-" : "+") << "," << num << ")";
@@ -94,7 +97,7 @@ class CharPattern: public Pattern {
 public:
   CharPattern(char c): var(c) {}
   virtual void sem() override {
-    this->type = new SimpleType(CHAR);
+    this->type = charType;
   }
   virtual void printOn(std::ostream &out) const override {
     out << "CharPattern(" << var << ")";
@@ -107,7 +110,7 @@ class BoolPattern: public Pattern {
 public:
   BoolPattern(bool v): val(v) {}
   virtual void sem() override {
-    this->type = new SimpleType(BOOL);
+    this->type = boolType;
   }
   virtual void printOn(std::ostream &out) const override {
     out << "BoolPattern(" << (val ? "true" : "false") << ")";
@@ -198,12 +201,12 @@ public:
     case DIV:
     case MOD:
       if (
-        !Type::equal_types(lhs->getType(), INT_TYPE) 
-        || !Type::equal_types(rhs->getType(), INT_TYPE)
+        !Type::equal_types(lhs->getType(), intType) 
+        || !Type::equal_types(rhs->getType(), intType)
       ) {
         Logger::error(this->lineno, "Operands must be of type INT");
       }
-      this->type = new SimpleType(INT);
+      this->type = intType;
       break; 
     
     default:
@@ -418,7 +421,7 @@ class IntHighPrioExpr: public HighPrioExpr {
 public:
   IntHighPrioExpr(int v): val(v) {}
   virtual void sem() override {
-    this->type = new SimpleType(INT);
+    this->type = intType;
   }
   virtual void printOn(std::ostream &out) const override {
     out << "IntHighPrioExpr(" << val << ")";
@@ -431,7 +434,7 @@ class CharHighPrioExpr: public HighPrioExpr {
 public:
   CharHighPrioExpr(char v): val(v) {}
   virtual void sem() override {
-    this->type = new SimpleType(CHAR);
+    this->type = charType;
   }
   virtual void printOn(std::ostream &out) const override {
     out << "CharHighPrioExpr(" << val << ")";
@@ -596,6 +599,8 @@ public:
   ): id(i), exp(e), block(p), type(t) {}
   ~ImmutableDef() { delete exp; delete block; delete type; }
   virtual void sem() override {
+    symbolaTable->newVariable(id, type, lineno);
+
     exp->sem();
     block->sem();
     // TODO: its not ready
