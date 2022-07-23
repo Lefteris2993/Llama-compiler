@@ -1,5 +1,8 @@
 let main = 
   match 42 with
       0 -> 'a'
-    | 42 -> 42
+    | 42 -> 17
+    | 17 -> 42
   end
+
+let b = 42

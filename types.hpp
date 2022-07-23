@@ -1,5 +1,5 @@
-#ifndef __SYMBOL_HPP__
-#define __SYMBOL_HPP__
+#ifndef __TYPES_HPP__
+#define __TYPES_HPP__
 
 #include <iostream>
 

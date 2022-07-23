@@ -10,7 +10,13 @@ const Type *INT_TYPE = new SimpleType(INT);
 const Type *UNIT_TYPE = new SimpleType(UNIT);
 const Type *CHAR_TYPE = new SimpleType(CHAR);
 const Type *BOOL_TYPE = new SimpleType(BOOL);
+
+extern int yylineno;
 %}
+
+%code requires {
+  #include "ast.hpp"
+}
 
 %define parse.error verbose
 
@@ -129,42 +135,42 @@ program:
 ;
 
 stmt_list:
-  /* nothing */     { $$ = new StmtBlock(); }
-| stmt_list letdef  { $1->append($2); $$ = $1; }
+  /* nothing */     { $$ = new StmtBlock(); $$->setLineno(yylineno); }
+| stmt_list letdef  { $1->append($2); $$ = $1; $$->setLineno(yylineno); }
 ;
 
 letdef:
-  "let" def_list        { $$ = new LetDef($2, false); }
-| "let" "rec" def_list  { $$ = new LetDef($3, true); }
+  "let" def_list        { $$ = new LetDef($2, false); $$->setLineno(yylineno); }
+| "let" "rec" def_list  { $$ = new LetDef($3, true); $$->setLineno(yylineno); }
 ;
 
 def_list:
-  def                 { DefBlock *d = new DefBlock(); d->append($1); $$ = d; }
-| def_list "and" def  { $1->append($3); $$ = $1; }
+  def                 { DefBlock *d = new DefBlock(); d->append($1); $$ = d; $$->setLineno(yylineno); }
+| def_list "and" def  { $1->append($3); $$ = $1; $$->setLineno(yylineno); }
 ;
 
 def:
-  T_id par_list '=' expr                            { $$ = new ImmutableDef(*$1, $2, $4); }
-| T_id par_list ':' type '=' expr                   { $$ = new ImmutableDef(*$1, $2, $6, $4); }
-| "mutable" T_id                                    { $$ = new MutableDef(*$2); }
-| "mutable" T_id ':' type                           { $$ = new MutableDef(*$2, $4); }
-| "mutable" T_id '[' comma_expr_list ']'            { $$ = new MutableArrayDef(*$2, $4); }
-| "mutable" T_id '[' comma_expr_list ']' ':' type   { $$ = new MutableArrayDef(*$2, $4, $7); }
+  T_id par_list '=' expr                            { $$ = new ImmutableDef(*$1, $2, $4); $$->setLineno(yylineno); }
+| T_id par_list ':' type '=' expr                   { $$ = new ImmutableDef(*$1, $2, $6, $4); $$->setLineno(yylineno); }
+| "mutable" T_id                                    { $$ = new MutableDef(*$2); $$->setLineno(yylineno); }
+| "mutable" T_id ':' type                           { $$ = new MutableDef(*$2, $4); $$->setLineno(yylineno); }
+| "mutable" T_id '[' comma_expr_list ']'            { $$ = new MutableArrayDef(*$2, $4); $$->setLineno(yylineno); }
+| "mutable" T_id '[' comma_expr_list ']' ':' type   { $$ = new MutableArrayDef(*$2, $4, $7); $$->setLineno(yylineno); }
 ;
 
 par_list:
-  /* nothing */ { $$ = new ParBlock(); }
-| par_list par  { $1->append($2); $$ = $1; }
+  /* nothing */ { $$ = new ParBlock(); $$->setLineno(yylineno); }
+| par_list par  { $1->append($2); $$ = $1; $$->setLineno(yylineno); }
 ;
 
 par:
-  T_id                  { $$ = new Par(*$1); }
-| '(' T_id ':' type ')' { $$ = new Par(*$2, $4); }
+  T_id                  { $$ = new Par(*$1); $$->setLineno(yylineno); }
+| '(' T_id ':' type ')' { $$ = new Par(*$2, $4); $$->setLineno(yylineno); }
 ;
 
 comma_expr_list:
-  expr                      { ExprBlock *b = new ExprBlock(); b->append($1); $$ = b; }
-| comma_expr_list ',' expr  { $1->append($3); $$ = $1; }
+  expr                      { ExprBlock *b = new ExprBlock(); b->append($1); $$ = b; $$->setLineno(yylineno); }
+| comma_expr_list ',' expr  { $1->append($3); $$ = $1; $$->setLineno(yylineno); }
 ;
 
 type:
@@ -184,78 +190,78 @@ star_list:
 ;
 
 expr: 
-  "not" expr                                            { $$ = new SigOpExpr(SigOp::NOT, $2); }
-| '+' expr %prec INT_POS_SIGN                           { $$ = new SigOpExpr(SigOp::SIG_PLUS, $2); }
-| '-' expr %prec INT_NEG_SIGN                           { $$ = new SigOpExpr(SigOp::SIG_MINUS, $2); }
-| expr '+' expr                                         { $$ = new BinOpExpr($1, BinOp::BIN_PLUS, $3); }
-| expr '-' expr                                         { $$ = new BinOpExpr($1, BinOp::BIN_MINUS, $3); }
-| expr '*' expr                                         { $$ = new BinOpExpr($1, BinOp::STAR, $3); }
-| expr '/' expr                                         { $$ = new BinOpExpr($1, BinOp::DIV, $3); }
-| expr "mod" expr                                       { $$ = new BinOpExpr($1, BinOp::MOD, $3); }
-| expr '=' expr                                         { $$ = new BinOpExpr($1, BinOp::STRUCT_EQ, $3); }
-| expr "<>" expr                                        { $$ = new BinOpExpr($1, BinOp::STRUCT_NE, $3); }
-| expr '<' expr                                         { $$ = new BinOpExpr($1, BinOp::L, $3); }
-| expr '>' expr                                         { $$ = new BinOpExpr($1, BinOp::G, $3); }
-| expr "<=" expr                                        { $$ = new BinOpExpr($1, BinOp::LE, $3); }
-| expr ">=" expr                                        { $$ = new BinOpExpr($1, BinOp::GE, $3); }
-| expr "==" expr                                        { $$ = new BinOpExpr($1, BinOp::EQ, $3); }
-| expr "!=" expr                                        { $$ = new BinOpExpr($1, BinOp::NE, $3); }
-| expr "&&" expr                                        { $$ = new BinOpExpr($1, BinOp::AND, $3); }
-| expr "||" expr                                        { $$ = new BinOpExpr($1, BinOp::OR, $3); }
-| expr ":=" expr                                        { $$ = new BinOpExpr($1, BinOp::ASS, $3); }
-| expr ';' expr                                         { $$ = new BinOpExpr($1, BinOp::PAR, $3); }
-| letdef "in" expr                                      { $$ = new LetInExpr($1, $3); }
-| "while" expr "do" expr "done"                         { $$ = new WhileExpr($2, $4); }
-| "for" T_id '=' expr "to" expr "do" expr "done"        { $$ = new ForExpr(true, *$2, $4, $6, $8); }
-| "for" T_id '=' expr "downto" expr "do" expr "done"    { $$ = new ForExpr(false, *$2, $4, $6, $8); }
-| "dim" T_id                                            { $$ = new DimExpr(*$2); }
-| "dim" T_const_int T_id                                { $$ = new DimExpr(*$3, $2); }
-| "new" type                                            { $$ = new NewExpr($2); }
-| "delete" expr                                         { $$ = new DeleteExpr($2); }
-| T_id expr_high_list                                   { $$ = new FunctionCall(*$1, $2); }
-| "if" expr "then" expr                                 { $$ = new IfThenElseExpr($2, $4); }
-| "if" expr "then" expr "else" expr                     { $$ = new IfThenElseExpr($2, $4, $6); }
-| "begin" expr "end"                                    { $$ = $2; }
-| "match" expr "with" clause_list "end"                 { $$ = new MatchExpr($2, $4); }
-| expr_high                                             { $$ = $1; }
+  "not" expr                                            { $$ = new SigOpExpr(SigOp::NOT, $2); $$->setLineno(yylineno); }
+| '+' expr %prec INT_POS_SIGN                           { $$ = new SigOpExpr(SigOp::SIG_PLUS, $2); $$->setLineno(yylineno); }
+| '-' expr %prec INT_NEG_SIGN                           { $$ = new SigOpExpr(SigOp::SIG_MINUS, $2); $$->setLineno(yylineno); }
+| expr '+' expr                                         { $$ = new BinOpExpr($1, BinOp::BIN_PLUS, $3); $$->setLineno(yylineno); }
+| expr '-' expr                                         { $$ = new BinOpExpr($1, BinOp::BIN_MINUS, $3); $$->setLineno(yylineno); }
+| expr '*' expr                                         { $$ = new BinOpExpr($1, BinOp::STAR, $3); $$->setLineno(yylineno); }
+| expr '/' expr                                         { $$ = new BinOpExpr($1, BinOp::DIV, $3); $$->setLineno(yylineno); }
+| expr "mod" expr                                       { $$ = new BinOpExpr($1, BinOp::MOD, $3); $$->setLineno(yylineno); }
+| expr '=' expr                                         { $$ = new BinOpExpr($1, BinOp::STRUCT_EQ, $3); $$->setLineno(yylineno); }
+| expr "<>" expr                                        { $$ = new BinOpExpr($1, BinOp::STRUCT_NE, $3); $$->setLineno(yylineno); }
+| expr '<' expr                                         { $$ = new BinOpExpr($1, BinOp::L, $3); $$->setLineno(yylineno); }
+| expr '>' expr                                         { $$ = new BinOpExpr($1, BinOp::G, $3); $$->setLineno(yylineno); }
+| expr "<=" expr                                        { $$ = new BinOpExpr($1, BinOp::LE, $3); $$->setLineno(yylineno); }
+| expr ">=" expr                                        { $$ = new BinOpExpr($1, BinOp::GE, $3); $$->setLineno(yylineno); }
+| expr "==" expr                                        { $$ = new BinOpExpr($1, BinOp::EQ, $3); $$->setLineno(yylineno); }
+| expr "!=" expr                                        { $$ = new BinOpExpr($1, BinOp::NE, $3); $$->setLineno(yylineno); }
+| expr "&&" expr                                        { $$ = new BinOpExpr($1, BinOp::AND, $3); $$->setLineno(yylineno); }
+| expr "||" expr                                        { $$ = new BinOpExpr($1, BinOp::OR, $3); $$->setLineno(yylineno); }
+| expr ":=" expr                                        { $$ = new BinOpExpr($1, BinOp::ASS, $3); $$->setLineno(yylineno); }
+| expr ';' expr                                         { $$ = new BinOpExpr($1, BinOp::PAR, $3); $$->setLineno(yylineno); }
+| letdef "in" expr                                      { $$ = new LetInExpr($1, $3); $$->setLineno(yylineno); }
+| "while" expr "do" expr "done"                         { $$ = new WhileExpr($2, $4); $$->setLineno(yylineno); }
+| "for" T_id '=' expr "to" expr "do" expr "done"        { $$ = new ForExpr(true, *$2, $4, $6, $8); $$->setLineno(yylineno); }
+| "for" T_id '=' expr "downto" expr "do" expr "done"    { $$ = new ForExpr(false, *$2, $4, $6, $8); $$->setLineno(yylineno); }
+| "dim" T_id                                            { $$ = new DimExpr(*$2); $$->setLineno(yylineno); }
+| "dim" T_const_int T_id                                { $$ = new DimExpr(*$3, $2); $$->setLineno(yylineno); }
+| "new" type                                            { $$ = new NewExpr($2); $$->setLineno(yylineno); }
+| "delete" expr                                         { $$ = new DeleteExpr($2); $$->setLineno(yylineno); }
+| T_id expr_high_list                                   { $$ = new FunctionCall(*$1, $2); $$->setLineno(yylineno); }
+| "if" expr "then" expr                                 { $$ = new IfThenElseExpr($2, $4); $$->setLineno(yylineno); }
+| "if" expr "then" expr "else" expr                     { $$ = new IfThenElseExpr($2, $4, $6); $$->setLineno(yylineno); }
+| "begin" expr "end"                                    { $$ = $2; $$->setLineno(yylineno); }
+| "match" expr "with" clause_list "end"                 { $$ = new MatchExpr($2, $4); $$->setLineno(yylineno); }
+| expr_high                                             { $$ = $1; $$->setLineno(yylineno); }
 ;
 
 expr_high: 
-  '!' expr_high                 { $$ = new DeRefHighPrioExpr($2); }            
-| '(' expr ')'                  { $$ = $2; }
-| '(' ')'                       { $$ = new UnitHighPrioExpr(); }
-| T_const_int                   { $$ = new IntHighPrioExpr($1); }
-| T_const_char                  { $$ = new CharHighPrioExpr($1); }
-| T_const_string                { $$ = new StringHighPrioExpr(*$1); }
-| "true"                        { $$ = new BoolHighPrioExpr(true); }
-| "false"                       { $$ = new BoolHighPrioExpr(false); }
-| T_id                          { $$ = new IdHighPrioExpr(*$1); }
-| T_id '[' comma_expr_list ']'  { $$ = new IdHighPrioExpr(*$1, $3); }
+  '!' expr_high                 { $$ = new DeRefHighPrioExpr($2); $$->setLineno(yylineno); }            
+| '(' expr ')'                  { $$ = $2; $$->setLineno(yylineno); }
+| '(' ')'                       { $$ = new UnitHighPrioExpr(); $$->setLineno(yylineno); }
+| T_const_int                   { $$ = new IntHighPrioExpr($1); $$->setLineno(yylineno); }
+| T_const_char                  { $$ = new CharHighPrioExpr($1); $$->setLineno(yylineno); }
+| T_const_string                { $$ = new StringHighPrioExpr(*$1); $$->setLineno(yylineno); }
+| "true"                        { $$ = new BoolHighPrioExpr(true); $$->setLineno(yylineno); }
+| "false"                       { $$ = new BoolHighPrioExpr(false); $$->setLineno(yylineno); }
+| T_id                          { $$ = new IdHighPrioExpr(*$1); $$->setLineno(yylineno); }
+| T_id '[' comma_expr_list ']'  { $$ = new IdHighPrioExpr(*$1, $3); $$->setLineno(yylineno); }
 ;
 
 expr_high_list: 
-  expr_high                 { HighPrioExprBlock *d = new HighPrioExprBlock(); d->append($1); $$ = d; }
-| expr_high_list expr_high  { $1->append($2); $$ = $1; }
+  expr_high                 { HighPrioExprBlock *d = new HighPrioExprBlock(); d->append($1); $$ = d; $$->setLineno(yylineno); }
+| expr_high_list expr_high  { $1->append($2); $$ = $1; $$->setLineno(yylineno); }
 ;
 
 clause_list:
-  clause                  { ClauseBlock *b = new ClauseBlock(); b->append($1); $$ = b; }
-| clause_list '|' clause  { $1->append($3); $$ = $1; }
+  clause                  { ClauseBlock *b = new ClauseBlock(); b->append($1); $$ = b; $$->setLineno(yylineno); }
+| clause_list '|' clause  { $1->append($3); $$ = $1; $$->setLineno(yylineno); }
 ;
 
 clause:
-  pattern "->" expr { $$ = new Clause($1, $3); }
+  pattern "->" expr { $$ = new Clause($1, $3); $$->setLineno(yylineno); }
 ;
 
 pattern:
-  '+' T_const_int %prec INT_POS_SIGN  { $$ = new NumPattern($2); }
-| '-' T_const_int %prec INT_NEG_SIGN  { $$ = new NumPattern($2, true); }
-| T_const_int                         { $$ = new NumPattern($1); }
-| T_const_char                        { $$ = new CharPattern($1); }
-| "true"                              { $$ = new BoolPattern(true); }
-| "false"                             { $$ = new BoolPattern(false); }
-| T_id                                { $$ = new VarPattern(*$1); }
-| '(' pattern ')'                     { $$ = $2; }
+  '+' T_const_int %prec INT_POS_SIGN  { $$ = new NumPattern($2); $$->setLineno(yylineno); }
+| '-' T_const_int %prec INT_NEG_SIGN  { $$ = new NumPattern($2, true); $$->setLineno(yylineno); }
+| T_const_int                         { $$ = new NumPattern($1); $$->setLineno(yylineno); }
+| T_const_char                        { $$ = new CharPattern($1); $$->setLineno(yylineno); }
+| "true"                              { $$ = new BoolPattern(true); $$->setLineno(yylineno); }
+| "false"                             { $$ = new BoolPattern(false); $$->setLineno(yylineno); }
+| T_id                                { $$ = new VarPattern(*$1); $$->setLineno(yylineno); }
+| '(' pattern ')'                     { $$ = $2; $$->setLineno(yylineno); }
 ;
 
 %%

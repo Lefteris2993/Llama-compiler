@@ -1,16 +1,16 @@
 %option noyywrap
-
+%option yylineno
 %{
 #include "ast.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "error.hpp"
 #include <string>
 #include <cstdlib>
 
-#define   T_eof                     0
+#define T_eof 0
 
 int comment_level = 0;
-int line_number = 0;
 
 %}
 
@@ -72,20 +72,20 @@ E    \\[ntr0\\\'\"]
 \"([^\n"])*\"        { yylval.var = new std::string(yytext); return T_const_string; } 
 \'([^\'\\\"]|{E})\' { yylval.c = yytext[1]; return T_const_char; }
 {LO}(_|{L}|{D})*    { yylval.var = new std::string(yytext); return T_id; }
-%[^\n]*\n           { line_number = line_number + 1 ;}
+%[^\n]*\n           { }
 
 \-\-.*              { /* ignore the rest of the line */ }
 
 "(*"                { comment_level++; BEGIN(COMMENT); }
 <COMMENT>"(*"       { comment_level++; }
 <COMMENT>"*)"       { comment_level--; if(!comment_level) BEGIN(INITIAL); }
-<COMMENT>\n         { line_number++; }
+<COMMENT>\n         { }
 <COMMENT>\*         { }
-<COMMENT>\(          { }
+<COMMENT>\(         { }
 <COMMENT>[^(*\n]+   { }
 
 {W}                 { }
-\n                  { line_number = line_number + 1; }
+\n                  { }
 <<EOF>>             { return T_eof; }
 .                   { yyerror("illegal character"); }
 

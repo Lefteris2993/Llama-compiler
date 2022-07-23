@@ -4,8 +4,9 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include "symbol.hpp"
+#include "types.hpp"
 #include "lexer.hpp"
+#include "error.hpp"
 
 enum BinOp { BIN_PLUS, BIN_MINUS, STAR, DIV, MOD, STRUCT_EQ, STRUCT_NE, L, G, LE, GE, EQ, NE, AND, OR, ASS, PAR };
 
@@ -21,6 +22,9 @@ public:
   virtual ~AST() {}
   virtual void printOn(std::ostream &out) const = 0;
   virtual void sem() { std::cout << "not implemented\n"; } // TODO: change this to virtual so all classes have to implement this.
+  virtual void setLineno(unsigned l) { this->lineno = l; }
+
+  unsigned lineno;
 };
 
 inline std::ostream& operator<< (std::ostream &out, const AST &t) {
@@ -53,7 +57,7 @@ public:
     for (Expr *c : block) {
       c->sem();
       if (!Type::equal_types(c->getType(), INT_TYPE)) {
-        yyerror("Array dimentions must be of type INT");
+        Logger::error(c->lineno, "Array dimentions must be of type INT");
       }
     }
   }
@@ -150,17 +154,17 @@ public:
   void append(Clause *c) { clauses.push_back(c); }
   virtual void sem() override {
     for (Clause *c : clauses) c->sem();
-    if (clauses.size() < 1) yyerror("Match expretion must have at least one clause");
+    if (clauses.size() < 1) Logger::error(this->lineno, "Match expretion must have at least one clause");
     Type *patternType = clauses[0]->getPattern()->getType();
     Type *exprType = clauses[0]->getExpr()->getType();
     for (Clause *c : clauses) { 
       if (!Type::equal_types(c->getExpr()->getType(), exprType)) {
-        yyerror("Match expretion clauses must return the same type");
+        Logger::error(c->lineno, "Match expretion clauses must return the same type");
       }  
     }
     for (Clause *c : clauses) {
       if (!Type::equal_types(c->getPattern()->getType(), patternType)) {
-        yyerror("Match expretion patterns must be the same type");
+        Logger::error(c->lineno, "Match expretion patterns must be the same type");
       }
     }
   }
@@ -197,13 +201,13 @@ public:
         !Type::equal_types(lhs->getType(), INT_TYPE) 
         || !Type::equal_types(rhs->getType(), INT_TYPE)
       ) {
-        yyerror("Operands must be of type INT");
+        Logger::error(this->lineno, "Operands must be of type INT");
       }
       this->type = new SimpleType(INT);
       break; 
     
     default:
-      yyerror("Not implemented");
+      Logger::error(this->lineno, "Not implemented");
       break;
     }
   }
