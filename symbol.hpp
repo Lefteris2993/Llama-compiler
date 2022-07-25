@@ -65,14 +65,11 @@ enum LookupType {
   LOOKUP_ALL_SCOPES 
 };
 
-class Scope {
-public:
+struct Scope {
+  ~Scope();
   unsigned nestingLevel;
   Scope *parent;
   SymbolEntry *entries;
-
-private:
-
 };
 
 class SymbolTable {

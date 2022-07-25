@@ -15,7 +15,6 @@
 
 #include "symbol.hpp"
 #include "error.hpp"
-#include "general.hpp"
 
 typedef unsigned long int HashType;
 
@@ -36,36 +35,41 @@ static HashType PJW_hash (const char * key) {
   return h;
 }
 
+Scope::~Scope() {
+  delete parent;
+  // entries will be deleted from SymbolTable; 
+}
+
 SymbolTable::SymbolTable(unsigned size) {
   unsigned int i;
       
-  currentScope = NULL;
+  currentScope = nullptr;
   tempNumber   = 1;
       
   hashTableSize = size;
-  hashTable = (SymbolEntry **) allocate(size * sizeof(SymbolEntry *));
+  hashTable = new SymbolEntry *[size];
   
   for (i = 0; i < size; i++)
-    hashTable[i] = NULL;
+    hashTable[i] = nullptr;
 }
 
 SymbolTable::~SymbolTable() {
   unsigned int i;
       
   for (i = 0; i < hashTableSize; i++)
-    if (hashTable[i] != NULL)
-      delete(hashTable[i]);
+    if (hashTable[i] != nullptr)
+      delete hashTable[i];
 
-  deallocate(hashTable);
+  delete currentScope;
 }
 
 void SymbolTable::openScope() {
-  Scope * newScope = (Scope *) allocate(sizeof(Scope));
+  Scope * newScope = new Scope();
 
   newScope->parent    = currentScope;
-  newScope->entries   = NULL;
+  newScope->entries   = nullptr;
 
-  if (currentScope == NULL)
+  if (currentScope == nullptr)
     newScope->nestingLevel = 1;
   else
     newScope->nestingLevel = currentScope->nestingLevel + 1;
@@ -77,16 +81,16 @@ void SymbolTable::closeScope() {
   SymbolEntry * e = currentScope->entries;
   Scope       * t = currentScope;
   
-  while (e != NULL) {
+  while (e != nullptr) {
     SymbolEntry * next = e->nextInScope;
     
     hashTable[e->hashValue] = e->nextHash;
-    delete(e);
+    delete e;
     e = next;
   }
   
   currentScope = currentScope->parent;
-  deallocate(t);
+  delete t;
 }
 
 void SymbolTable::insertEntry(SymbolEntry *e) {
@@ -100,13 +104,13 @@ template <class T>
 T *SymbolTable::newEntry(std::string name, unsigned lineno) {
   SymbolEntry * e;
     
-  for (e = currentScope->entries; e != NULL; e = e->nextInScope)
+  for (e = currentScope->entries; e != nullptr; e = e->nextInScope)
     if (name.compare(e->id) == 0) {
       Logger::error(lineno, "Duplicate identifier: %s", name.c_str());
-      return NULL;
+      return nullptr;
     }
 
-  T *newEntity = (T *) allocate(sizeof(T));
+  T *newEntity = new T();
   newEntity->id = name;
 
   newEntity->hashValue    = PJW_hash(name.c_str()) % hashTableSize;
@@ -118,7 +122,7 @@ T *SymbolTable::newEntry(std::string name, unsigned lineno) {
 VarSymbolEntry *SymbolTable::newVariable(std::string name, Type *type, unsigned lineno) {
   VarSymbolEntry * e = newEntry<VarSymbolEntry>(name, lineno);
   
-  if (e != NULL) {
+  if (e != nullptr) {
     e->entryType = ENTRY_VARIABLE;
     e->type = type;
   }
@@ -128,24 +132,24 @@ VarSymbolEntry *SymbolTable::newVariable(std::string name, Type *type, unsigned 
 FunSymbolEntry *SymbolTable::newFunction(std::string name, unsigned lineno) {
   FunSymbolEntry * e = ( FunSymbolEntry* ) lookupEntry(name, LOOKUP_CURRENT_SCOPE, false);
 
-  if (e == NULL) {
+  if (e == nullptr) {
     e = newEntry<FunSymbolEntry>(name);
-    if (e != NULL) {
+    if (e != nullptr) {
       e->entryType = ENTRY_FUNCTION;
       e->isForward = false;
-      e->firstArgument = e->lastArgument = NULL;
-      e->type = NULL;
+      e->firstArgument = e->lastArgument = nullptr;
+      e->type = nullptr;
     }
     return ((FunSymbolEntry*) e);
   }
   else if (e->entryType == ENTRY_FUNCTION && e->isForward) {
     e->isForward = false;
-    e->lastArgument = NULL;
+    e->lastArgument = nullptr;
     return e;
   }
   else {
     Logger::error(lineno, "Duplicate identifier: %s", name.c_str());
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -157,12 +161,12 @@ ParSymbolEntry *SymbolTable::newParameter(std::string name, Type *type, FunSymbo
   switch (f->pardef) {
     case FunSymbolEntry::PARDEF_DEFINE:
       e = newEntry<ParSymbolEntry>(name, lineno);
-      if (e != NULL) {
+      if (e != nullptr) {
         e->entryType = ENTRY_PARAMETER;
         e->type = type;
-        e->next = NULL;
+        e->next = nullptr;
       }
-      if (f->lastArgument == NULL)
+      if (f->lastArgument == nullptr)
         f->firstArgument = f->lastArgument = e;
       else {
         f->lastArgument->next = e;
@@ -171,11 +175,11 @@ ParSymbolEntry *SymbolTable::newParameter(std::string name, Type *type, FunSymbo
       return e;            
     case FunSymbolEntry::PARDEF_CHECK:
       e = f->lastArgument;
-      if (e == NULL)
+      if (e == nullptr)
         e = f->firstArgument;
       else
         e = e->next;
-      if (e == NULL)
+      if (e == nullptr)
         Logger::error(lineno, "More parameters than expected in redeclaration "
           "of function %s", f->id.c_str());
       else if (!Type::equal_types(e->type, type))
@@ -191,7 +195,7 @@ ParSymbolEntry *SymbolTable::newParameter(std::string name, Type *type, FunSymbo
     case FunSymbolEntry::PARDEF_COMPLETE:
       Logger::fatal("Cannot add a parameter to an already defined function");
   }
-  return NULL;
+  return nullptr;
 }
 
 void SymbolTable::forwardFunction(FunSymbolEntry * f) {
@@ -212,8 +216,8 @@ void SymbolTable::endFunctionHeader(FunSymbolEntry *f, Type *type, unsigned line
       break;
     case FunSymbolEntry::PARDEF_CHECK:
       if (
-        (f->lastArgument != NULL && f->lastArgument->next != NULL) ||
-        (f->lastArgument == NULL && f->firstArgument != NULL)
+        (f->lastArgument != nullptr && f->lastArgument->next != nullptr) ||
+        (f->lastArgument == nullptr && f->firstArgument != nullptr)
       )
         Logger::error(lineno, "Fewer parameters than expected in redeclaration "
           "of function %s", f->id.c_str());
@@ -228,10 +232,10 @@ void SymbolTable::endFunctionHeader(FunSymbolEntry *f, Type *type, unsigned line
 SymbolEntry::~SymbolEntry() {}
 FunSymbolEntry::~FunSymbolEntry() {
   ParSymbolEntry *args = this->firstArgument;
-  while (args != NULL) {
+  while (args != nullptr) {
       ParSymbolEntry * p = args;
       args = args->next;
-      delete(p);
+      delete p;
   }
 }
 
@@ -241,14 +245,14 @@ SymbolEntry *SymbolTable::lookupEntry(std::string name, LookupType type, bool er
   
   switch (type) {
     case LOOKUP_CURRENT_SCOPE:
-      while (e != NULL && e->nestingLevel == currentScope->nestingLevel)
+      while (e != nullptr && e->nestingLevel == currentScope->nestingLevel)
         if (name.compare(e->id) == 0)
           return e;
         else
           e = e->nextHash;
       break;
     case LOOKUP_ALL_SCOPES:
-      while (e != NULL)
+      while (e != nullptr)
         if (name.compare(e->id) == 0)
           return e;
         else
@@ -258,5 +262,5 @@ SymbolEntry *SymbolTable::lookupEntry(std::string name, LookupType type, bool er
   
   if (err)
     Logger::error(lineno, "Unknown identifier: %s", name.c_str());
-  return NULL;
+  return nullptr;
 }

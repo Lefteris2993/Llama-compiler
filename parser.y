@@ -273,6 +273,6 @@ int main () {
   symbolaTable = new SymbolTable(42);
   symbolaTable->openScope();
   int result = yyparse();
-  delete(symbolaTable);
+  delete symbolaTable;
   return result;
 }
