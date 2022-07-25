@@ -13,6 +13,8 @@ enum BinOp { BIN_PLUS, BIN_MINUS, STAR, DIV, MOD, STRUCT_EQ, STRUCT_NE, L, G, LE
 
 enum SigOp { NOT, SIG_PLUS, SIG_MINUS, EXCL };
 
+enum DefType { DEF_MUTABLE, DEF_IMMUTABLE, DEF_ARRAY };
+
 extern Type *intType;
 extern Type *unitType;
 extern Type *charType;
@@ -22,10 +24,10 @@ extern SymbolTable *symbolaTable;
 
 class AST {
 public:
-  virtual ~AST() {}
+  virtual ~AST();
   virtual void printOn(std::ostream &out) const = 0;
-  virtual void sem() { std::cout << "not implemented\n"; } // TODO: change this to virtual so all classes have to implement this.
-  virtual void setLineno(unsigned l) { this->lineno = l; }
+  virtual void sem();
+  virtual void setLineno(unsigned l);
 
   unsigned lineno;
 };
@@ -37,13 +39,16 @@ inline std::ostream& operator<< (std::ostream &out, const AST &t) {
 
 class Stmt: public AST {};
 
-class Def: public Stmt {};
+class Def: public Stmt {
+public:
+  Def();
+  ~Def();
+  virtual DefType getDefType() const = 0;
+};
 
 class Expr: public AST {
 public:
-  Type *getType() {
-    return type;
-  }
+  Type *getType();
 
 protected:
   Type *type;
@@ -53,27 +58,11 @@ class Pattern: public Expr {};
 
 class ExprBlock: public AST {
 public:
-  ExprBlock(): block() {}
-  ~ExprBlock() { for (Expr *b : block) delete b; }
-  void append(Expr *c) { block.push_back(c); }
-  virtual void sem() override {
-    for (Expr *c : block) {
-      c->sem();
-      if (!Type::equal_types(c->getType(), intType)) {
-        Logger::error(c->lineno, "Array dimentions must be of type INT");
-      }
-    }
-  }
-  virtual void printOn(std::ostream &out) const override {
-    out << "ExprBlock(";
-    bool first = true;
-    for (Expr *c : block) {
-      if (!first) out << ", ";
-      first = false;
-      out << *c;
-    }
-    out << ")";
-  }
+  ExprBlock();
+  ~ExprBlock();
+  void append(Expr *c);
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override ;
 
 private:
   std::vector<Expr *> block;
@@ -81,13 +70,9 @@ private:
 
 class NumPattern: public Pattern {
 public:
-  NumPattern(int n, bool neg = false): num(n), negative(neg) {}
-  virtual void sem() override {
-    this->type = intType;
-  }
-  virtual void printOn(std::ostream &out) const override {
-    out << "NumPattern(" << (negative ? "-" : "+") << "," << num << ")";
-  }
+  NumPattern(int n, bool neg = false);
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 private:
   int num;
   bool negative;
@@ -95,26 +80,18 @@ private:
 
 class CharPattern: public Pattern {
 public:
-  CharPattern(char c): var(c) {}
-  virtual void sem() override {
-    this->type = charType;
-  }
-  virtual void printOn(std::ostream &out) const override {
-    out << "CharPattern(" << var << ")";
-  }
+  CharPattern(char c);
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 private:
   char var;
 };
 
 class BoolPattern: public Pattern {
 public:
-  BoolPattern(bool v): val(v) {}
-  virtual void sem() override {
-    this->type = boolType;
-  }
-  virtual void printOn(std::ostream &out) const override {
-    out << "BoolPattern(" << (val ? "true" : "false") << ")";
-  }
+  BoolPattern(bool v);
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 
 private:
   bool val;
@@ -122,10 +99,9 @@ private:
 
 class VarPattern: public Pattern {
 public:
-  VarPattern(std::string v): var(v) {}
-  virtual void printOn(std::ostream &out) const override {
-    out << "VarPattern(" << var << ")";
-  }
+  VarPattern(std::string v);
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 
 private:
   std::string var;
@@ -133,18 +109,13 @@ private:
 
 class Clause: public AST {
 public:
-  Clause(Pattern *p, Expr *e): pattern(p), expr(e) {}
-  ~Clause() { delete pattern; delete expr; }
-  virtual void sem() override {
-    pattern->sem();
-    expr->sem();
-  }
-  virtual void printOn(std::ostream &out) const override {
-    out << "Clause(" << *pattern << "," << *expr << ")";
-  }
+  Clause(Pattern *p, Expr *e);
+  ~Clause();
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 
-  Pattern *getPattern() { return pattern; }
-  Expr *getExpr() { return expr; }
+  Pattern *getPattern();
+  Expr *getExpr();
 private:
   Pattern *pattern;
   Expr *expr;
@@ -152,35 +123,11 @@ private:
 
 class ClauseBlock: public AST {
 public:
-  ClauseBlock(): clauses() {}
-  ~ClauseBlock() { for (Clause *c : clauses) delete c; }
-  void append(Clause *c) { clauses.push_back(c); }
-  virtual void sem() override {
-    for (Clause *c : clauses) c->sem();
-    if (clauses.size() < 1) Logger::error(this->lineno, "Match expretion must have at least one clause");
-    Type *patternType = clauses[0]->getPattern()->getType();
-    Type *exprType = clauses[0]->getExpr()->getType();
-    for (Clause *c : clauses) { 
-      if (!Type::equal_types(c->getExpr()->getType(), exprType)) {
-        Logger::error(c->lineno, "Match expretion clauses must return the same type");
-      }  
-    }
-    for (Clause *c : clauses) {
-      if (!Type::equal_types(c->getPattern()->getType(), patternType)) {
-        Logger::error(c->lineno, "Match expretion patterns must be the same type");
-      }
-    }
-  }
-  virtual void printOn(std::ostream &out) const override {
-    out << "ClauseBlock(";
-    bool first = true;
-    for (Clause *c : clauses) {
-      if (!first) out << ", ";
-      first = false;
-      out << *c;
-    }
-    out << ")";
-  }
+  ClauseBlock();
+  ~ClauseBlock();
+  void append(Clause *c);
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 
 private:
   std::vector<Clause*> clauses;
@@ -188,35 +135,10 @@ private:
 
 class BinOpExpr: public Expr {
 public:
-  BinOpExpr(Expr *l, BinOp p, Expr *r): lhs(l), rhs(r), op(p) {}
-  ~BinOpExpr() { delete lhs; delete rhs; }
-  virtual void sem() override {
-    lhs->sem();
-    rhs->sem();
-    switch (op)
-    {
-    case BIN_PLUS:
-    case BIN_MINUS:
-    case STAR:
-    case DIV:
-    case MOD:
-      if (
-        !Type::equal_types(lhs->getType(), intType) 
-        || !Type::equal_types(rhs->getType(), intType)
-      ) {
-        Logger::error(this->lineno, "Operands must be of type INT");
-      }
-      this->type = intType;
-      break; 
-    
-    default:
-      Logger::error(this->lineno, "Not implemented");
-      break;
-    }
-  }
-  virtual void printOn(std::ostream &out) const override {
-    out << "BinOp(" << op << "," << *lhs << "," << *rhs << ")";
-  }
+  BinOpExpr(Expr *l, BinOp p, Expr *r);
+  ~BinOpExpr();
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 
 private:
   Expr *lhs;
@@ -226,11 +148,10 @@ private:
 
 class SigOpExpr: public Expr {
 public:
-  SigOpExpr(SigOp p, Expr *e): expr(e), op(p) {}
-  ~SigOpExpr() { delete expr; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "SigOp(" << op << "," << *expr << ")";
-  }
+  SigOpExpr(SigOp p, Expr *e);
+  ~SigOpExpr();
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
   
 private:
   Expr *expr;
@@ -239,22 +160,12 @@ private:
 
 class DefBlock: public Stmt {
 public:
-  DefBlock(): block() {}
-  ~DefBlock() { for (Def *b : block) delete b; }
-  void append(Def *d) { block.push_back(d); }
-  virtual void sem() override {
-    for (Stmt *s : block) s->sem(); 
-  }
-  virtual void printOn(std::ostream &out) const override {
-    out << "DefBlock(";
-    bool first = true;
-    for (Stmt *s : block) {
-      if (!first) out << ", ";
-      first = false;
-      out << *s;
-    }
-    out << ")";
-  }
+  DefBlock();
+  ~DefBlock();
+  void append(Def *d);
+  virtual void sem() override;
+  void recSem();
+  virtual void printOn(std::ostream &out) const override;
 
 private:
   std::vector<Def *> block;
@@ -262,18 +173,10 @@ private:
 
 class LetDef: public Stmt {
 public:
-  LetDef(DefBlock *b, bool rec): defBlock(b), rec(rec) {}
-  ~LetDef() { delete defBlock; }
-  virtual void sem() override { 
-    defBlock->sem(); 
-  }
-  virtual void printOn(std::ostream &out) const override {
-    out << "LetDef";
-    if (rec) out << "Rec";
-    out << "(";
-    out << *defBlock;
-    out << ")";
-  }
+  LetDef(DefBlock *b, bool rec);
+  ~LetDef();
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 
 private:
   DefBlock *defBlock;
@@ -282,11 +185,10 @@ private:
 
 class LetInExpr: public Expr {
 public:
-  LetInExpr(LetDef *l, Expr *e): let(l), expr(e) {}
-  ~LetInExpr() { delete let; delete expr; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "LetInExpr(" << *let << "," << *expr << ")";
-  }
+  LetInExpr(LetDef *l, Expr *e);
+  ~LetInExpr();
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 private:
   LetDef *let;
   Expr *expr;
@@ -295,11 +197,10 @@ private:
 
 class WhileExpr: public Expr {
 public:
-  WhileExpr(Expr *c, Expr *b): cond(c), body(b) {}
-  ~WhileExpr() { delete cond; delete body; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "While(" << *cond << "," << *body << ")";
-  }
+  WhileExpr(Expr *c, Expr *b);
+  ~WhileExpr();
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 private:
   Expr *cond;
   Expr *body;
@@ -307,17 +208,10 @@ private:
 
 class ForExpr: public Expr {
 public:
-  ForExpr(
-    bool u, 
-    std::string i, 
-    Expr *q, 
-    Expr *t, 
-    Expr *b
-  ): up(u), id(i), eq(q), to(t), body(b) {}
-  ~ForExpr() { delete eq; delete to; delete body; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "For(" << (up ? "true" : "false") << "," << id << "," << *eq << "," << *to << "," << *body << ")";  
-  }
+  ForExpr(bool u, std::string i, Expr *q, Expr *t, Expr *b);
+  ~ForExpr();
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 private:
   bool up;
   std::string id;
@@ -328,10 +222,9 @@ private:
 
 class DimExpr: public Expr {
 public:
-  DimExpr(std::string i, unsigned c = -1): id(i), dimention(c) {}
-  virtual void printOn(std::ostream &out) const override {
-    out << "Dim(" << dimention << "," << id << ")";
-  }
+  DimExpr(std::string i, unsigned c = -1);
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 private:
   std::string id;
   unsigned dimention;
@@ -339,39 +232,30 @@ private:
 
 class NewExpr: public Expr {
 public:
-  NewExpr(Type *t): type(t) {}
-  ~NewExpr() { delete type; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "New(" << *type << ")"; 
-  }
+  NewExpr(Type *t);
+  ~NewExpr();
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 private:
   Type *type;
 };
 
 class DeleteExpr: public Expr {
 public:
-  DeleteExpr(Expr *e): expr(e) {}
-  ~DeleteExpr() { delete expr; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "Delete(" << *expr << ")";
-  }
+  DeleteExpr(Expr *e);
+  ~DeleteExpr();
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 private:
   Expr *expr;
 };
 
 class IfThenElseExpr: public Expr {
 public:
-  IfThenElseExpr(
-    Expr *c, 
-    Expr *e1, 
-    Expr *e2 = nullptr
-  ): cond(c), expr1(e1), expr2(e2) {}
-  ~IfThenElseExpr() { delete cond; delete expr1; delete expr2; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "IfThenElse(" << *cond << "," << *expr1;
-    if (expr2 != nullptr) out << "," << *expr2;
-    out << ")";
-  }
+  IfThenElseExpr(Expr *c, Expr *e1, Expr *e2 = nullptr);
+  ~IfThenElseExpr();
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 private:
   Expr *cond;
   Expr *expr1;
@@ -380,15 +264,10 @@ private:
 
 class MatchExpr: public Expr {
 public:
-  MatchExpr(Expr *e, ClauseBlock *c): expr(e), block(c) {}
-  ~MatchExpr() { delete expr; delete block; }
-  virtual void sem() override {
-    expr->sem();
-    block->sem();
-  }
-  virtual void printOn(std::ostream &out) const override {
-    out << "MatchExpr(" << *expr << "," << *block << ")";
-  }
+  MatchExpr(Expr *e, ClauseBlock *c);
+  ~MatchExpr();
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 private:
   Expr *expr;
   ClauseBlock *block;
@@ -398,80 +277,64 @@ typedef Expr HighPrioExpr;
 
 class DeRefHighPrioExpr: public HighPrioExpr {
 public:
-  DeRefHighPrioExpr(HighPrioExpr *e): expr(e) {}
-  ~DeRefHighPrioExpr() { delete expr; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "DeRefHighPrioExpr(" << *expr << ")";
-  }
+  DeRefHighPrioExpr(HighPrioExpr *e);
+  ~DeRefHighPrioExpr();
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 private:
   HighPrioExpr *expr;
 };
 
 class UnitHighPrioExpr: public HighPrioExpr {
 public:
-  UnitHighPrioExpr() {}
-  virtual void printOn(std::ostream &out) const override {
-    out << "UnitHighPrioExpr( unit )";
-  }
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 private:
 
 };
 
 class IntHighPrioExpr: public HighPrioExpr {
 public:
-  IntHighPrioExpr(int v): val(v) {}
-  virtual void sem() override {
-    this->type = intType;
-  }
-  virtual void printOn(std::ostream &out) const override {
-    out << "IntHighPrioExpr(" << val << ")";
-  }
+  IntHighPrioExpr(int v);
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 private:
   int val;
 };
 
 class CharHighPrioExpr: public HighPrioExpr {
 public:
-  CharHighPrioExpr(char v): val(v) {}
-  virtual void sem() override {
-    this->type = charType;
-  }
-  virtual void printOn(std::ostream &out) const override {
-    out << "CharHighPrioExpr(" << val << ")";
-  }
+  CharHighPrioExpr(char v);
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 private:
   char val;
 };
 
 class StringHighPrioExpr: public HighPrioExpr {
 public:
-  StringHighPrioExpr(std::string s): val(s) {}
-  virtual void printOn(std::ostream &out) const override {
-    out << "StringHighPrioExpr(" << val << ")";
-  }
+  StringHighPrioExpr(std::string s);
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 private:
   std::string val;
 };
 
 class BoolHighPrioExpr: public HighPrioExpr {
 public:
-  BoolHighPrioExpr(bool v): val(v) {}
-  virtual void printOn(std::ostream &out) const override {
-    out << "BoolHighPrioExpr(" << (val ? "true" : "false") << ")";
-  }
+  BoolHighPrioExpr(bool v);
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 private:
   bool val;
 };
 
 class IdHighPrioExpr: public HighPrioExpr {
 public:
-  IdHighPrioExpr(std::string i, ExprBlock *c = nullptr): id(i), commaExprList(c) {}
-  ~IdHighPrioExpr() { delete commaExprList; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "IdHighPrioExpr(" << id;
-    if (commaExprList != nullptr) out << "," << *commaExprList;
-    out << ")";
-  }
+  IdHighPrioExpr(std::string i, ExprBlock *c = nullptr);
+  ~IdHighPrioExpr();
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 
 private:
   std::string id;
@@ -480,19 +343,11 @@ private:
 
 class HighPrioExprBlock: public Expr {
 public:
-  HighPrioExprBlock(): block() {}
-  ~HighPrioExprBlock() { for (HighPrioExpr *b : block) delete b; }
-  void append(HighPrioExpr *d) { block.push_back(d); }
-  virtual void printOn(std::ostream &out) const override {
-    out << "ExprHighBlock(";
-    bool first = true;
-    for (HighPrioExpr *s : block) {
-      if (!first) out << ", ";
-      first = false;
-      out << *s;
-    }
-    out << ")";
-  }
+  HighPrioExprBlock();
+  ~HighPrioExprBlock();
+  void append(HighPrioExpr *d);
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 
 private:
   std::vector<HighPrioExpr *> block;
@@ -501,35 +356,22 @@ private:
 
 class StmtBlock: public Stmt {
 public:
-  StmtBlock(): stmt_list() {}
-  ~StmtBlock() { for (Stmt *s : stmt_list) delete s; }
-  void append(Stmt *s) { stmt_list.push_back(s); }
-  virtual void sem() override {
-    for (Stmt *s : stmt_list) s->sem();
-  }
-  virtual void printOn(std::ostream &out) const override {
-    out << "StmtBlock(";
-    bool first = true;
-    for (Stmt *s : stmt_list) {
-      if (!first) out << ", ";
-      first = false;
-      out << *s;
-    }
-    out << ")";
-  }
+  StmtBlock();
+  ~StmtBlock();
+  void append(Stmt *s);
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 private:
   std::vector<Stmt *> stmt_list;
 };
 
 class MutableDef: public Def {
 public:
-  MutableDef(std::string i, Type *t = nullptr): id(i), type(t) {}
-  ~MutableDef() { delete type; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "MutableDef(" << id;
-    if (type != nullptr) out << "," << *type;
-    out << ")";
-  }
+  MutableDef(std::string i, Type *t = nullptr);
+  ~MutableDef();
+  virtual DefType getDefType() const override;
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 
 private:
   std::string id;
@@ -538,17 +380,11 @@ private:
 
 class MutableArrayDef: public Def {
 public:
-  MutableArrayDef(
-    std::string i, 
-    ExprBlock *b, 
-    Type *t = nullptr
-  ): id(i), block(b), type(t) {}
-  ~MutableArrayDef() { delete block; delete type; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "MutableArrayDef(" << id << "," << *block;
-    if (type != nullptr) out << "," << *type;
-    out << ")";
-  }
+  MutableArrayDef(std::string i, ExprBlock *b, Type *t = nullptr);
+  ~MutableArrayDef();
+  virtual DefType getDefType() const override;
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 
 private:
   std::string id;
@@ -558,13 +394,11 @@ private:
 
 class Par: public AST {
 public:
-  Par(std::string i, Type *t = nullptr): id(i), type(t) {}
-  ~Par() { delete type; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "Par(" << id;
-    if (type != nullptr) out << "," << *type;
-    out << ")";
-  }
+  Par(std::string i, Type *t = nullptr);
+  ~Par();
+  virtual void sem() override;
+  void insertParam(FunSymbolEntry *f);
+  virtual void printOn(std::ostream &out) const override;
 private:
   std::string id;
   Type *type;
@@ -572,59 +406,38 @@ private:
 
 class ParBlock: public AST {
 public:
-  ParBlock(): block() {}
-  ~ParBlock() { for (Par *b : block) delete b; }
-  void append(Par *p) { block.push_back(p); }
-  virtual void printOn(std::ostream &out) const override {
-    out << "ParBlock(";
-    bool first = true;
-    for (Par *p : block) {
-      if (!first) out << ", ";
-      first = false;
-      out << *p;
-    }
-    out << ")";
-  }
+  ParBlock();
+  ~ParBlock();
+  void append(Par *p);
+  virtual void sem() override;
+  void insertParams(FunSymbolEntry *f);
+  virtual void printOn(std::ostream &out) const override;
 private:
   std::vector<Par *> block;
 };
 
 class ImmutableDef: public Def {
 public:
-  ImmutableDef(
-    std::string i,
-    ParBlock *p,  
-    Expr *e, 
-    Type *t = nullptr
-  ): id(i), exp(e), block(p), type(t) {}
-  ~ImmutableDef() { delete exp; delete block; delete type; }
-  virtual void sem() override {
-    symbolaTable->newVariable(id, type, lineno);
-
-    exp->sem();
-    block->sem();
-    // TODO: its not ready
-  }
-  virtual void printOn(std::ostream &out) const override {
-    out << "ImmutableDef(" << id << "," << *exp << "," << *block;
-    if (type != nullptr) out << "," << *type; 
-    out << ")";
-  }
+  ImmutableDef(std::string i, ParBlock *p, Expr *e, Type *t = nullptr);
+  ~ImmutableDef();
+  virtual DefType getDefType() const override;
+  virtual void sem() override;
+  void decl();
+  virtual void printOn(std::ostream &out) const override;
 
 private:
   std::string id;
-  Expr *exp;
+  Expr *expr;
   ParBlock *block;
   Type *type;
 };
 
 class FunctionCall: public Expr {
 public:
-  FunctionCall(std::string id, HighPrioExprBlock *b): id(id), block(b) {}
-  ~FunctionCall() { delete block; }
-  virtual void printOn(std::ostream &out) const override {
-    out << "FunctionCall(" << id << "," << *block << ")";
-  }
+  FunctionCall(std::string id, HighPrioExprBlock *b);
+  ~FunctionCall();
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
 private:
   std::string id;
   HighPrioExprBlock *block;

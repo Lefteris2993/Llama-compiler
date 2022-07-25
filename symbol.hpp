@@ -30,6 +30,11 @@ enum EntryType {
   ENTRY_TEMPORARY
 };
 
+enum FunDefStatus {
+  FUN_DEF_DEFINE,
+  FUN_DEF_COMPLETE
+};
+
 struct SymbolEntry {
   virtual ~SymbolEntry();
   std::string id;
@@ -48,16 +53,12 @@ struct ParSymbolEntry: SymbolEntry {
 };
 
 struct FunSymbolEntry: SymbolEntry {
+  FunSymbolEntry();
   ~FunSymbolEntry();
-  bool isForward;
   ParSymbolEntry *firstArgument;
   ParSymbolEntry *lastArgument;
   int firstQuad;
-  enum {
-    PARDEF_COMPLETE,
-    PARDEF_DEFINE,
-    PARDEF_CHECK
-  } pardef;
+  FunDefStatus status;
 };
 
 enum LookupType { 
@@ -66,7 +67,6 @@ enum LookupType {
 };
 
 struct Scope {
-  ~Scope();
   unsigned nestingLevel;
   Scope *parent;
   SymbolEntry *entries;
@@ -84,9 +84,9 @@ public:
   FunSymbolEntry *newFunction(std::string name, unsigned lineno = -1);
   ParSymbolEntry *newParameter(std::string name, Type *type, FunSymbolEntry *f, unsigned lineno = -1);
 
-  void forwardFunction(FunSymbolEntry *f);
-  void endFunctionHeader(FunSymbolEntry *f, Type *type, unsigned lineno = -1);
-  SymbolEntry *lookupEntry(std::string name, LookupType type, bool err, unsigned lineno = -1);
+  void endFunctionDef(FunSymbolEntry *f, Type *type, unsigned lineno = -1);
+  template <class T>
+  T *lookupEntry(std::string name, LookupType type, bool err, unsigned lineno = -1);
 
   Scope *currentScope;
 

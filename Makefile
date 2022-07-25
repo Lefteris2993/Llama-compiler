@@ -15,8 +15,18 @@ parser.hpp parser.cpp: parser.y
 
 parser.o: parser.cpp lexer.hpp ast.hpp types.hpp error.hpp symbol.hpp
 
-Llama: lexer.o parser.o
-	$(CXX) $(CXXFLAGS) -o Llama lexer.o parser.o types.cpp error.cpp symbol.cpp
+types.o: types.hpp types.cpp
+
+ast.o: ast.cpp ast.hpp
+
+sem.o: sem.cpp ast.hpp
+
+error.o: error.cpp error.hpp parser.hpp
+
+symbol.o: symbol.cpp symbol.hpp
+
+Llama: error.o ast.o types.o symbol.o sem.o lexer.o parser.o
+	$(CXX) $(CXXFLAGS) -o $@ $^
 
 clean:
 	$(RM) lexer.cpp parser.cpp parser.hpp parser.output *.o

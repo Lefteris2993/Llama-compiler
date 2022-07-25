@@ -87,7 +87,7 @@ E    \\[ntr0\\\'\"]
 {W}                 { }
 \n                  { }
 <<EOF>>             { return T_eof; }
-.                   { yyerror("illegal character"); }
+.                   { printf("%d", yylineno); yyerror("illegal character"); }
 
 %%
 

@@ -16,6 +16,14 @@
 #include "symbol.hpp"
 #include "error.hpp"
 
+
+// This function is used to force the compiler to create template functions. It is never callled.
+void Templates() {
+  SymbolTable *s = new SymbolTable(42);
+  s->lookupEntry<SymbolEntry>("", LOOKUP_CURRENT_SCOPE, false);
+  s->lookupEntry<FunSymbolEntry>("", LOOKUP_CURRENT_SCOPE, false);
+}
+
 typedef unsigned long int HashType;
 
 static HashType PJW_hash (const char * key) {
@@ -35,11 +43,6 @@ static HashType PJW_hash (const char * key) {
   return h;
 }
 
-Scope::~Scope() {
-  delete parent;
-  // entries will be deleted from SymbolTable; 
-}
-
 SymbolTable::SymbolTable(unsigned size) {
   unsigned int i;
       
@@ -54,13 +57,17 @@ SymbolTable::SymbolTable(unsigned size) {
 }
 
 SymbolTable::~SymbolTable() {
-  unsigned int i;
+  // // TODO:
+  // unsigned int i;
       
-  for (i = 0; i < hashTableSize; i++)
-    if (hashTable[i] != nullptr)
-      delete hashTable[i];
-
-  delete currentScope;
+  // for (i = 0; i < hashTableSize; i++) {
+  //   if (hashTable[i] != nullptr) {
+  //     delete hashTable[i];
+  //   }
+  // }
+    
+      
+  // delete currentScope;
 }
 
 void SymbolTable::openScope() {
@@ -130,22 +137,16 @@ VarSymbolEntry *SymbolTable::newVariable(std::string name, Type *type, unsigned 
 }
 
 FunSymbolEntry *SymbolTable::newFunction(std::string name, unsigned lineno) {
-  FunSymbolEntry * e = ( FunSymbolEntry* ) lookupEntry(name, LOOKUP_CURRENT_SCOPE, false);
+  FunSymbolEntry * e = lookupEntry<FunSymbolEntry>(name, LOOKUP_CURRENT_SCOPE, false);
 
   if (e == nullptr) {
     e = newEntry<FunSymbolEntry>(name);
     if (e != nullptr) {
       e->entryType = ENTRY_FUNCTION;
-      e->isForward = false;
       e->firstArgument = e->lastArgument = nullptr;
       e->type = nullptr;
     }
     return ((FunSymbolEntry*) e);
-  }
-  else if (e->entryType == ENTRY_FUNCTION && e->isForward) {
-    e->isForward = false;
-    e->lastArgument = nullptr;
-    return e;
   }
   else {
     Logger::error(lineno, "Duplicate identifier: %s", name.c_str());
@@ -158,88 +159,61 @@ ParSymbolEntry *SymbolTable::newParameter(std::string name, Type *type, FunSymbo
   
   if (f->entryType != ENTRY_FUNCTION)
     Logger::internal("Cannot add a parameter to a non-function");
-  switch (f->pardef) {
-    case FunSymbolEntry::PARDEF_DEFINE:
+  switch (f->status) {
+    case FunDefStatus::FUN_DEF_DEFINE:
       e = newEntry<ParSymbolEntry>(name, lineno);
       if (e != nullptr) {
         e->entryType = ENTRY_PARAMETER;
+        e->id = name;
         e->type = type;
         e->next = nullptr;
       }
-      if (f->lastArgument == nullptr)
+      if (f->lastArgument == nullptr) {
         f->firstArgument = f->lastArgument = e;
+      }
       else {
         f->lastArgument->next = e;
         f->lastArgument = e;
       }
       return e;            
-    case FunSymbolEntry::PARDEF_CHECK:
-      e = f->lastArgument;
-      if (e == nullptr)
-        e = f->firstArgument;
-      else
-        e = e->next;
-      if (e == nullptr)
-        Logger::error(lineno, "More parameters than expected in redeclaration "
-          "of function %s", f->id.c_str());
-      else if (!Type::equal_types(e->type, type))
-        Logger::error(lineno, "Parameter type mismatch in redeclaration "
-          "of function %s", f->id.c_str());
-      else if (name.compare(e->id) != 0)
-        Logger::error(lineno, "Parameter name mismatch in redeclaration "
-          "of function %s", f->id.c_str());
-      else
-        insertEntry(e);
-      f->lastArgument = e;
-      return e;
-    case FunSymbolEntry::PARDEF_COMPLETE:
+    case FunDefStatus::FUN_DEF_COMPLETE:
       Logger::fatal("Cannot add a parameter to an already defined function");
   }
   return nullptr;
 }
 
-void SymbolTable::forwardFunction(FunSymbolEntry * f) {
-  if (f->entryType != ENTRY_FUNCTION)
-    Logger::internal("Cannot make a non-function forward");
-  f->isForward = true;
-}
-
-void SymbolTable::endFunctionHeader(FunSymbolEntry *f, Type *type, unsigned lineno) {
+void SymbolTable::endFunctionDef(FunSymbolEntry *f, Type *type, unsigned lineno) {
   if (f->entryType != ENTRY_FUNCTION)
     Logger::internal("Cannot end parameters in a non-function");
-  switch (f->pardef) {
-    case FunSymbolEntry::PARDEF_COMPLETE:
+  switch (f->status) {
+    case FunDefStatus::FUN_DEF_COMPLETE:
       Logger::internal("Cannot end parameters in an already defined function");
       break;
-    case FunSymbolEntry::PARDEF_DEFINE:
+    case FunDefStatus::FUN_DEF_DEFINE:
       f->type = type;
       break;
-    case FunSymbolEntry::PARDEF_CHECK:
-      if (
-        (f->lastArgument != nullptr && f->lastArgument->next != nullptr) ||
-        (f->lastArgument == nullptr && f->firstArgument != nullptr)
-      )
-        Logger::error(lineno, "Fewer parameters than expected in redeclaration "
-          "of function %s", f->id.c_str());
-      if (!Type::equal_types(f->type, type))
-        Logger::error(lineno, "Result type mismatch in redeclaration of function %s",
-          f->id.c_str());
-      break;
   }
-  f->pardef = FunSymbolEntry::PARDEF_COMPLETE;
+  f->status = FunDefStatus::FUN_DEF_COMPLETE;
 }
 
 SymbolEntry::~SymbolEntry() {}
+
+FunSymbolEntry::FunSymbolEntry() {
+  status = FunDefStatus::FUN_DEF_DEFINE;
+}
 FunSymbolEntry::~FunSymbolEntry() {
-  ParSymbolEntry *args = this->firstArgument;
-  while (args != nullptr) {
-      ParSymbolEntry * p = args;
-      args = args->next;
-      delete p;
-  }
+  // // TODO:
+  // ParSymbolEntry *args = this->firstArgument;
+  // while (args != nullptr) {
+  //   ParSymbolEntry * p = args;
+  //   args = args->next;
+  //   delete p;
+  // }
 }
 
-SymbolEntry *SymbolTable::lookupEntry(std::string name, LookupType type, bool err, unsigned lineno) {
+// TODO: does this implement screarch throw scopes correctly? 
+template <class T>
+T *SymbolTable::lookupEntry(std::string name, LookupType type, bool err, unsigned lineno) {
   unsigned int  hashValue = PJW_hash(name.c_str()) % hashTableSize;
   SymbolEntry * e         = hashTable[hashValue];
   
@@ -247,14 +221,14 @@ SymbolEntry *SymbolTable::lookupEntry(std::string name, LookupType type, bool er
     case LOOKUP_CURRENT_SCOPE:
       while (e != nullptr && e->nestingLevel == currentScope->nestingLevel)
         if (name.compare(e->id) == 0)
-          return e;
+          return (T *)e;
         else
           e = e->nextHash;
       break;
     case LOOKUP_ALL_SCOPES:
       while (e != nullptr)
         if (name.compare(e->id) == 0)
-          return e;
+          return (T *)e;
         else
           e = e->nextHash;
       break;
