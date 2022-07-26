@@ -4,6 +4,7 @@ extern Type *intType;
 extern Type *unitType;
 extern Type *charType;
 extern Type *boolType;
+extern Type *stringType;
 
 AST::~AST() {}
 void AST::setLineno(unsigned l) { this->lineno = l; }
@@ -208,8 +209,9 @@ void IdHighPrioExpr::printOn(std::ostream &out) const {
 HighPrioExprBlock::HighPrioExprBlock(): block() {}
 HighPrioExprBlock::~HighPrioExprBlock() { for (HighPrioExpr *b : block) delete b; }
 void HighPrioExprBlock::append(HighPrioExpr *d) { block.push_back(d); }
+unsigned HighPrioExprBlock::getBlockLength() { return block.size(); } 
 void HighPrioExprBlock::printOn(std::ostream &out) const {
-  out << "ExprHighBlock(";
+  out << "HighPrioExprBlock(";
   bool first = true;
   for (HighPrioExpr *s : block) {
     if (!first) out << ",";
@@ -258,6 +260,7 @@ void MutableArrayDef::printOn(std::ostream &out) const {
 
 Par::Par(std::string i, Type *t): id(i), type(t) {}
 Par::~Par() { delete type; }
+Type *Par::getType() { return type; }
 void Par::printOn(std::ostream &out) const {
   out << "Par(" << id;
   if (type != nullptr) out << "," << *type;

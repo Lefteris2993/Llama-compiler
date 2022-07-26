@@ -48,13 +48,13 @@ private:
 
 class ArrayType: public Type {
 public:
-  ArrayType(unsigned s, Type *t);
+  ArrayType(Type *t, int s = -1);
   ~ArrayType();
   virtual void printOn(std::ostream &out) const override;
   Type *getType();
-  unsigned getStars();
+  int getStars();
 private:
-  unsigned stars;
+  int stars;
   Type *type;
 };
 
@@ -72,5 +72,6 @@ extern Type *intType;
 extern Type *unitType;
 extern Type *charType;
 extern Type *boolType;
+extern Type *stringType;
 
 #endif

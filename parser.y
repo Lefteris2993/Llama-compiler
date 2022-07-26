@@ -11,6 +11,7 @@ extern Type *intType;
 extern Type *unitType;
 extern Type *charType;
 extern Type *boolType;
+extern Type *stringType;
 
 extern int yylineno;
 
@@ -183,8 +184,9 @@ type:
 | "bool"                                { $$ = new SimpleType(BaseType::BOOL); }
 | '(' type ')'                          { $$ = $2; }
 | type "->" type                        { $$ = new FunctionType($1, $3); }
-| type "ref"                            { $$ = new RefType($1); }                    
-| "array" '[' star_list ']' "of" type   { $$ = new ArrayType($3, $6); }
+| type "ref"                            { $$ = new RefType($1); }     
+| "array" "of" type                     { $$ = new ArrayType($3); }               
+| "array" '[' star_list ']' "of" type   { $$ = new ArrayType($6, $3); }
 ;
 
 star_list:

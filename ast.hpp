@@ -19,6 +19,7 @@ extern Type *intType;
 extern Type *unitType;
 extern Type *charType;
 extern Type *boolType;
+extern Type *stringType;
 
 extern SymbolTable *symbolaTable;
 
@@ -347,11 +348,12 @@ public:
   ~HighPrioExprBlock();
   void append(HighPrioExpr *d);
   virtual void sem() override;
+  void parCheck(FunSymbolEntry *f);
   virtual void printOn(std::ostream &out) const override;
+  unsigned getBlockLength();
 
 private:
   std::vector<HighPrioExpr *> block;
-  std::string id;
 };
 
 class StmtBlock: public Stmt {
@@ -398,6 +400,7 @@ public:
   ~Par();
   virtual void sem() override;
   void insertParam(FunSymbolEntry *f);
+  Type *getType();
   virtual void printOn(std::ostream &out) const override;
 private:
   std::string id;
@@ -412,7 +415,6 @@ public:
   virtual void sem() override;
   void insertParams(FunSymbolEntry *f);
   virtual void printOn(std::ostream &out) const override;
-private:
   std::vector<Par *> block;
 };
 

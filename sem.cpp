@@ -19,7 +19,10 @@ void CharPattern::sem() { type = charType; }
 
 void BoolPattern::sem() { type = boolType; }
 
-void VarPattern::sem() { /*TODO: */ }
+void VarPattern::sem() {
+  SymbolEntry *s = symbolaTable->lookupEntry<SymbolEntry>(var, LOOKUP_ALL_SCOPES, true, lineno);
+  type = s->type;
+}
 
 void Clause::sem() {
   pattern->sem();
@@ -44,6 +47,7 @@ void ClauseBlock::sem() {
 }
 
 void BinOpExpr::sem() {
+  // TODO: complete for all operators
   lhs->sem();
   rhs->sem();
 
@@ -66,7 +70,7 @@ void BinOpExpr::sem() {
     ) {
       Logger::error(lineno, "Operands must be of type INT");
     }
-    this->type = intType;
+    type = intType;
     break; 
 
   case STRUCT_EQ:
@@ -79,6 +83,7 @@ void BinOpExpr::sem() {
     ) {
       Logger::error(lineno, "Operands must be of type INT or BOOL");
     }
+    type = boolType;
 
     break;
   
@@ -88,7 +93,28 @@ void BinOpExpr::sem() {
   }
 }
 
-void SigOpExpr::sem() { /*TODO: */ }
+void SigOpExpr::sem() {
+  expr->sem();
+  switch (op)
+  {
+  case SigOp::NOT:
+    if (!Type::equal_types(expr->getType(), boolType))
+      Logger::error(lineno, "Invalid argument for \"not\" expresion");
+      type = boolType;
+    break;
+
+  case SigOp::SIG_MINUS:
+  case SigOp::SIG_PLUS:
+    if (!Type::equal_types(expr->getType(), intType))
+      Logger::error(lineno, "Invalid argument for sign expresion");
+      type = intType;
+    break;
+
+  default:
+    Logger::error(lineno, "Not implemented");
+    break;
+  }
+}
 
 void DefBlock::sem() {
   for (Def *d : block) {
@@ -112,7 +138,20 @@ void LetDef::sem() {
 
 void LetInExpr::sem() { /*TODO: */ }
 
-void WhileExpr::sem() { /*TODO: */ }
+void WhileExpr::sem() {
+  cond->sem();
+
+  if (
+    !Type::equal_types(cond->getType(), boolType) &&
+    !Type::equal_types(cond->getType(), intType)
+  ) {
+    Logger::error(lineno, "While condition must be of type BOOl or INT");
+  }
+
+  body->sem();
+
+  type = unitType;
+}
 
 void ForExpr::sem() { /*TODO: */ }
 
@@ -153,26 +192,30 @@ void MatchExpr::sem() {
 
 void DeRefHighPrioExpr::sem() { /*TODO: */ }
 
-void UnitHighPrioExpr::sem() { /*TODO: */ }
+void UnitHighPrioExpr::sem() { type = unitType; }
 
-void IntHighPrioExpr::sem() {
-  this->type = intType;
-}
+void IntHighPrioExpr::sem() { type = intType; }
 
-void CharHighPrioExpr::sem() {
-  this->type = charType;
-}
+void CharHighPrioExpr::sem() { type = charType; }
 
-void StringHighPrioExpr::sem() { /*TODO: */ }
+void StringHighPrioExpr::sem() { type = stringType; }
 
 void BoolHighPrioExpr::sem() { type = boolType; }
 
 void IdHighPrioExpr::sem() {
-  SymbolEntry *s = symbolaTable->lookupEntry<SymbolEntry>(id, LOOKUP_CURRENT_SCOPE, false, lineno);
+  SymbolEntry *s = symbolaTable->lookupEntry<SymbolEntry>(id, LOOKUP_ALL_SCOPES, true, lineno);
   type = s->type;
 }
 
-void HighPrioExprBlock::sem() { /*TODO: */ }
+void HighPrioExprBlock::sem() {
+  for (HighPrioExpr *e : block) e->sem();
+}
+void HighPrioExprBlock::parCheck(FunSymbolEntry *f) {
+  for (unsigned i = 0; i < block.size(); i++) {
+    if (!Type::equal_types(f->paramTypes[i], block[i]->getType()))
+      Logger::error(lineno, "Arrgument in possition %d is NOT of correct type in function \"%s\"", i, f->id.c_str());
+  }
+}
 
 void StmtBlock::sem() {
   for (Stmt *s : stmt_list) s->sem();
@@ -199,7 +242,12 @@ void ParBlock::insertParams(FunSymbolEntry *f) {
 }
 
 void ImmutableDef::sem() {
-  FunSymbolEntry *f =  symbolaTable->newFunction(id, lineno);
+  FunSymbolEntry *f = symbolaTable->newFunction(id, type, lineno);
+  f->paramNum = block->block.size();
+  f->paramTypes = new Type *[block->block.size()];
+  for (unsigned i = 0; i < block->block.size(); i++) {
+    f->paramTypes[i] = block->block[i]->getType();
+  }
 }
 void ImmutableDef::decl() {
   FunSymbolEntry *f = symbolaTable->lookupEntry<FunSymbolEntry>(id, LOOKUP_CURRENT_SCOPE, false, lineno);
@@ -218,10 +266,15 @@ void ImmutableDef::decl() {
 }
 
 void FunctionCall::sem() {
-  FunSymbolEntry *f = symbolaTable->lookupEntry<FunSymbolEntry>(id, LOOKUP_CURRENT_SCOPE, false, lineno);
+  FunSymbolEntry *f = symbolaTable->lookupEntry<FunSymbolEntry>(id, LOOKUP_ALL_SCOPES, true, lineno);
   if (f->entryType != EntryType::ENTRY_FUNCTION) 
-    Logger::error(lineno, "\"%s\" is not a function", f->id);
+    Logger::error(lineno, "\"%s\" is not a function", f->id.c_str());
 
-  // TODO:
-  // sem expr list... check arguments if they are the same number and types...
+  if (f->paramNum != block->getBlockLength())
+    Logger::error(lineno, "Incorrect number of parameters passed in function :%s", id.c_str());
+
+  block->sem();
+  block->parCheck(f);
+
+  type = f->type;
 }

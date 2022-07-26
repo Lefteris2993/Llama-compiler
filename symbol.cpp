@@ -136,7 +136,7 @@ VarSymbolEntry *SymbolTable::newVariable(std::string name, Type *type, unsigned 
   return e;
 }
 
-FunSymbolEntry *SymbolTable::newFunction(std::string name, unsigned lineno) {
+FunSymbolEntry *SymbolTable::newFunction(std::string name, Type *type, unsigned lineno) {
   FunSymbolEntry * e = lookupEntry<FunSymbolEntry>(name, LOOKUP_CURRENT_SCOPE, false);
 
   if (e == nullptr) {
@@ -144,7 +144,7 @@ FunSymbolEntry *SymbolTable::newFunction(std::string name, unsigned lineno) {
     if (e != nullptr) {
       e->entryType = ENTRY_FUNCTION;
       e->firstArgument = e->lastArgument = nullptr;
-      e->type = nullptr;
+      e->type = type;
     }
     return ((FunSymbolEntry*) e);
   }
@@ -199,6 +199,7 @@ void SymbolTable::endFunctionDef(FunSymbolEntry *f, Type *type, unsigned lineno)
 SymbolEntry::~SymbolEntry() {}
 
 FunSymbolEntry::FunSymbolEntry() {
+  paramNum = 0;
   status = FunDefStatus::FUN_DEF_DEFINE;
 }
 FunSymbolEntry::~FunSymbolEntry() {

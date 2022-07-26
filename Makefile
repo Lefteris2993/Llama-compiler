@@ -2,6 +2,7 @@
 
 CXX=c++
 CXXFLAGS=-Wall -std=c++11
+PYTHON=python3
 
 default: Llama
 
@@ -27,6 +28,9 @@ symbol.o: symbol.cpp symbol.hpp
 
 Llama: error.o ast.o types.o symbol.o sem.o lexer.o parser.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
+
+test: Llama
+	$(PYTHON) runTests.py
 
 clean:
 	$(RM) lexer.cpp parser.cpp parser.hpp parser.output *.o

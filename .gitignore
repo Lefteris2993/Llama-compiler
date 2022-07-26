@@ -6,3 +6,5 @@ parser.output
 *.o
 Llama
 temp
+.test.temp
+*.ast

@@ -59,6 +59,8 @@ struct FunSymbolEntry: SymbolEntry {
   ParSymbolEntry *lastArgument;
   int firstQuad;
   FunDefStatus status;
+  unsigned paramNum;
+  Type **paramTypes;
 };
 
 enum LookupType { 
@@ -81,7 +83,7 @@ public:
   void closeScope();
 
   VarSymbolEntry *newVariable(std::string name, Type *type, unsigned lineno = -1);
-  FunSymbolEntry *newFunction(std::string name, unsigned lineno = -1);
+  FunSymbolEntry *newFunction(std::string name, Type *type, unsigned lineno = -1);
   ParSymbolEntry *newParameter(std::string name, Type *type, FunSymbolEntry *f, unsigned lineno = -1);
 
   void endFunctionDef(FunSymbolEntry *f, Type *type, unsigned lineno = -1);
