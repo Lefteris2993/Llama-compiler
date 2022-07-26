@@ -1,6 +1,6 @@
 #include "ast.hpp"
 
-extern SymbolTable *symbolaTable;
+extern SymbolTable *symbolTable;
 
 void AST::sem() { std::cout << "not implemented\n"; } // TODO: change this to so all classes have to implement this.
 
@@ -8,7 +8,7 @@ void ExprBlock::sem() {
   for (Expr *c : block) {
     c->sem();
     if (!Type::equal_types(c->getType(), intType)) {
-      Logger::error(c->lineno, "Array dimentions must be of type INT");
+      Logger::error(c->lineno, "Array dimensions must be of type INT");
     }
   }
 }
@@ -20,7 +20,7 @@ void CharPattern::sem() { type = charType; }
 void BoolPattern::sem() { type = boolType; }
 
 void VarPattern::sem() {
-  SymbolEntry *s = symbolaTable->lookupEntry<SymbolEntry>(var, LOOKUP_ALL_SCOPES, true, lineno);
+  SymbolEntry *s = symbolTable->lookupEntry<SymbolEntry>(var, LOOKUP_ALL_SCOPES, true, lineno);
   type = s->type;
 }
 
@@ -31,17 +31,17 @@ void Clause::sem() {
 
 void ClauseBlock::sem() {
   for (Clause *c : clauses) c->sem();
-  if (clauses.size() < 1) Logger::error(this->lineno, "Match expretion must have at least one clause");
+  if (clauses.size() < 1) Logger::error(this->lineno, "Match expresion must have at least one clause");
   Type *patternType = clauses[0]->getPattern()->getType();
   Type *exprType = clauses[0]->getExpr()->getType();
   for (Clause *c : clauses) { 
     if (!Type::equal_types(c->getExpr()->getType(), exprType)) {
-      Logger::error(c->lineno, "Match expretion clauses must return the same type");
+      Logger::error(c->lineno, "Match expresion clauses must return the same type");
     }  
   }
   for (Clause *c : clauses) {
     if (!Type::equal_types(c->getPattern()->getType(), patternType)) {
-      Logger::error(c->lineno, "Match expretion patterns must be the same type");
+      Logger::error(c->lineno, "Match expresion patterns must be the same type");
     }
   }
 }
@@ -98,16 +98,16 @@ void SigOpExpr::sem() {
   switch (op)
   {
   case SigOp::NOT:
-    if (!Type::equal_types(expr->getType(), boolType))
+    if (!Type::equal_types(expr->getType(), boolType)) 
       Logger::error(lineno, "Invalid argument for \"not\" expresion");
-      type = boolType;
+    type = boolType;
     break;
 
   case SigOp::SIG_MINUS:
   case SigOp::SIG_PLUS:
     if (!Type::equal_types(expr->getType(), intType))
       Logger::error(lineno, "Invalid argument for sign expresion");
-      type = intType;
+    type = intType;
     break;
 
   default:
@@ -178,7 +178,7 @@ void IfThenElseExpr::sem() {
     Type *t2 = expr2->getType();
 
     if (!Type::equal_types(t1, t2)) {
-      Logger::error(lineno, "\"then\" and \"else\" expretions have different types");
+      Logger::error(lineno, "\"then\" and \"else\" excretions have different types");
     }
   }
 
@@ -203,7 +203,7 @@ void StringHighPrioExpr::sem() { type = stringType; }
 void BoolHighPrioExpr::sem() { type = boolType; }
 
 void IdHighPrioExpr::sem() {
-  SymbolEntry *s = symbolaTable->lookupEntry<SymbolEntry>(id, LOOKUP_ALL_SCOPES, true, lineno);
+  SymbolEntry *s = symbolTable->lookupEntry<SymbolEntry>(id, LOOKUP_ALL_SCOPES, true, lineno);
   type = s->type;
 }
 
@@ -213,7 +213,7 @@ void HighPrioExprBlock::sem() {
 void HighPrioExprBlock::parCheck(FunSymbolEntry *f) {
   for (unsigned i = 0; i < block.size(); i++) {
     if (!Type::equal_types(f->paramTypes[i], block[i]->getType()))
-      Logger::error(lineno, "Arrgument in possition %d is NOT of correct type in function \"%s\"", i, f->id.c_str());
+      Logger::error(lineno, "Argument in position %d is NOT of correct type in function \"%s\"", i, f->id.c_str());
   }
 }
 
@@ -222,16 +222,16 @@ void StmtBlock::sem() {
 }
 
 void MutableDef::sem() {
-  symbolaTable->newVariable(id, type, lineno);
+  symbolTable->newVariable(id, type, lineno);
 }
 
 void MutableArrayDef::sem() {
-  symbolaTable->newVariable(id, type, lineno);
+  symbolTable->newVariable(id, type, lineno);
 }
 
 void Par::sem() {}
 void Par::insertParam(FunSymbolEntry *f) {
-  symbolaTable->newParameter(id, type, f, lineno);
+  symbolTable->newParameter(id, type, f, lineno);
 }
 
 void ParBlock::sem() {
@@ -242,7 +242,7 @@ void ParBlock::insertParams(FunSymbolEntry *f) {
 }
 
 void ImmutableDef::sem() {
-  FunSymbolEntry *f = symbolaTable->newFunction(id, type, lineno);
+  FunSymbolEntry *f = symbolTable->newFunction(id, type, lineno);
   f->paramNum = block->block.size();
   f->paramTypes = new Type *[block->block.size()];
   for (unsigned i = 0; i < block->block.size(); i++) {
@@ -250,8 +250,8 @@ void ImmutableDef::sem() {
   }
 }
 void ImmutableDef::decl() {
-  FunSymbolEntry *f = symbolaTable->lookupEntry<FunSymbolEntry>(id, LOOKUP_CURRENT_SCOPE, false, lineno);
-  symbolaTable->openScope();
+  FunSymbolEntry *f = symbolTable->lookupEntry<FunSymbolEntry>(id, LOOKUP_CURRENT_SCOPE, false, lineno);
+  symbolTable->openScope();
   block->insertParams(f);
 
   expr->sem();
@@ -261,12 +261,12 @@ void ImmutableDef::decl() {
   }
   if (type == nullptr) type = expr->getType();
 
-  symbolaTable->endFunctionDef(f, type, lineno);
-  symbolaTable->closeScope();
+  symbolTable->endFunctionDef(f, type, lineno);
+  symbolTable->closeScope();
 }
 
 void FunctionCall::sem() {
-  FunSymbolEntry *f = symbolaTable->lookupEntry<FunSymbolEntry>(id, LOOKUP_ALL_SCOPES, true, lineno);
+  FunSymbolEntry *f = symbolTable->lookupEntry<FunSymbolEntry>(id, LOOKUP_ALL_SCOPES, true, lineno);
   if (f->entryType != EntryType::ENTRY_FUNCTION) 
     Logger::error(lineno, "\"%s\" is not a function", f->id.c_str());
 

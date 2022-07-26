@@ -132,9 +132,9 @@ void ForExpr::printOn(std::ostream &out) const {
   out << "For(" << (up ? "true" : "false") << "," << id << "," << *eq << "," << *to << "," << *body << ")";  
 }
 
-DimExpr::DimExpr(std::string i, unsigned c): id(i), dimention(c) {}
+DimExpr::DimExpr(std::string i, unsigned c): id(i), dimension(c) {}
 void DimExpr::printOn(std::ostream &out) const {
-  out << "Dim(" << dimention << "," << id << ")";
+  out << "Dim(" << dimension << "," << id << ")";
 }
 
 NewExpr::NewExpr(Type *t): type(t) {}

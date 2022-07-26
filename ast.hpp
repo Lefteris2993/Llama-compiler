@@ -21,7 +21,7 @@ extern Type *charType;
 extern Type *boolType;
 extern Type *stringType;
 
-extern SymbolTable *symbolaTable;
+extern SymbolTable *symbolTable;
 
 class AST {
 public:
@@ -228,7 +228,7 @@ public:
   virtual void printOn(std::ostream &out) const override;
 private:
   std::string id;
-  unsigned dimention;
+  unsigned dimension;
 };
 
 class NewExpr: public Expr {

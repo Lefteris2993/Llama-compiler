@@ -15,7 +15,7 @@ extern Type *stringType;
 
 extern int yylineno;
 
-SymbolTable *symbolaTable;
+SymbolTable *symbolTable;
 %}
 
 %code requires {
@@ -272,9 +272,9 @@ pattern:
 %%
 
 int main () {
-  symbolaTable = new SymbolTable(42);
-  symbolaTable->openScope();
+  symbolTable = new SymbolTable(42);
+  symbolTable->openScope();
   int result = yyparse();
-  delete symbolaTable;
+  delete symbolTable;
   return result;
 }

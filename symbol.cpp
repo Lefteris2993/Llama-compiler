@@ -17,7 +17,7 @@
 #include "error.hpp"
 
 
-// This function is used to force the compiler to create template functions. It is never callled.
+// This function is used to force the compiler to create template functions. It is never called.
 void Templates() {
   SymbolTable *s = new SymbolTable(42);
   s->lookupEntry<SymbolEntry>("", LOOKUP_CURRENT_SCOPE, false);
@@ -212,7 +212,7 @@ FunSymbolEntry::~FunSymbolEntry() {
   // }
 }
 
-// TODO: does this implement screarch throw scopes correctly? 
+// TODO: does this implement search throw scopes correctly? 
 template <class T>
 T *SymbolTable::lookupEntry(std::string name, LookupType type, bool err, unsigned lineno) {
   unsigned int  hashValue = PJW_hash(name.c_str()) % hashTableSize;
