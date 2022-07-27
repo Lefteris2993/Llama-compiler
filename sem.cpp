@@ -20,7 +20,7 @@ void CharPattern::sem() { type = charType; }
 void BoolPattern::sem() { type = boolType; }
 
 void VarPattern::sem() {
-  SymbolEntry *s = symbolTable->lookupEntry<SymbolEntry>(var, LOOKUP_ALL_SCOPES, true, lineno);
+  SymbolEntry *s = symbolTable->lookupEntry<SymbolEntry>(var, true, lineno);
   type = s->type;
 }
 
@@ -203,7 +203,7 @@ void StringHighPrioExpr::sem() { type = stringType; }
 void BoolHighPrioExpr::sem() { type = boolType; }
 
 void IdHighPrioExpr::sem() {
-  SymbolEntry *s = symbolTable->lookupEntry<SymbolEntry>(id, LOOKUP_ALL_SCOPES, true, lineno);
+  SymbolEntry *s = symbolTable->lookupEntry<SymbolEntry>(id, true, lineno);
   type = s->type;
 }
 
@@ -250,7 +250,7 @@ void ImmutableDef::sem() {
   }
 }
 void ImmutableDef::decl() {
-  FunSymbolEntry *f = symbolTable->lookupEntry<FunSymbolEntry>(id, LOOKUP_CURRENT_SCOPE, false, lineno);
+  FunSymbolEntry *f = symbolTable->lookupEntry<FunSymbolEntry>(id, false, lineno);
   symbolTable->openScope();
   block->insertParams(f);
 
@@ -266,7 +266,7 @@ void ImmutableDef::decl() {
 }
 
 void FunctionCall::sem() {
-  FunSymbolEntry *f = symbolTable->lookupEntry<FunSymbolEntry>(id, LOOKUP_ALL_SCOPES, true, lineno);
+  FunSymbolEntry *f = symbolTable->lookupEntry<FunSymbolEntry>(id, true, lineno);
   if (f->entryType != EntryType::ENTRY_FUNCTION) 
     Logger::error(lineno, "\"%s\" is not a function", f->id.c_str());
 

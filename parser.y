@@ -275,6 +275,7 @@ int main () {
   symbolTable = new SymbolTable(42);
   symbolTable->openScope();
   int result = yyparse();
+  symbolTable->closeScope();
   delete symbolTable;
   return result;
 }

@@ -36,12 +36,11 @@ enum FunDefStatus {
 };
 
 struct SymbolEntry {
-  virtual ~SymbolEntry();
   std::string id;
   EntryType entryType;
   unsigned nestingLevel;
   unsigned hashValue;
-  SymbolEntry *nextHash;
+  SymbolEntry *nextInHashTable;
   SymbolEntry *nextInScope;
   Type *type;
 };
@@ -49,23 +48,15 @@ struct SymbolEntry {
 struct VarSymbolEntry: SymbolEntry {};
 
 struct ParSymbolEntry: SymbolEntry {
-  ParSymbolEntry *next;
+  ParSymbolEntry *nextParam;
 };
 
 struct FunSymbolEntry: SymbolEntry {
-  FunSymbolEntry();
-  ~FunSymbolEntry();
   ParSymbolEntry *firstArgument;
   ParSymbolEntry *lastArgument;
-  int firstQuad;
   FunDefStatus status;
   unsigned paramNum;
   Type **paramTypes;
-};
-
-enum LookupType { 
-  LOOKUP_CURRENT_SCOPE, 
-  LOOKUP_ALL_SCOPES 
 };
 
 struct Scope {
@@ -77,7 +68,6 @@ struct Scope {
 class SymbolTable {
 public:
   SymbolTable(unsigned size);
-  ~SymbolTable();
 
   void openScope();
   void closeScope();
@@ -88,16 +78,14 @@ public:
 
   void endFunctionDef(FunSymbolEntry *f, Type *type, unsigned lineno = -1);
   template <class T>
-  T *lookupEntry(std::string name, LookupType type, bool err, unsigned lineno = -1);
+  T *lookupEntry(std::string name, bool err, unsigned lineno = -1);
 
   Scope *currentScope;
 
 private:
-  void insertEntry(SymbolEntry *e);
   template <class T>
-  T *newEntry(std::string name, unsigned lineno = -1);
+  T *newEntry(std::string name, Type *type, unsigned lineno = -1);
 
-  unsigned tempNumber;
   unsigned hashTableSize;
   SymbolEntry **hashTable;
 };

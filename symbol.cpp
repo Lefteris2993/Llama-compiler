@@ -20,8 +20,8 @@
 // This function is used to force the compiler to create template functions. It is never called.
 void Templates() {
   SymbolTable *s = new SymbolTable(42);
-  s->lookupEntry<SymbolEntry>("", LOOKUP_CURRENT_SCOPE, false);
-  s->lookupEntry<FunSymbolEntry>("", LOOKUP_CURRENT_SCOPE, false);
+  s->lookupEntry<SymbolEntry>("", false);
+  s->lookupEntry<FunSymbolEntry>("", false);
 }
 
 typedef unsigned long int HashType;
@@ -47,27 +47,12 @@ SymbolTable::SymbolTable(unsigned size) {
   unsigned int i;
       
   currentScope = nullptr;
-  tempNumber   = 1;
       
   hashTableSize = size;
   hashTable = new SymbolEntry *[size];
   
   for (i = 0; i < size; i++)
     hashTable[i] = nullptr;
-}
-
-SymbolTable::~SymbolTable() {
-  // // TODO:
-  // unsigned int i;
-      
-  // for (i = 0; i < hashTableSize; i++) {
-  //   if (hashTable[i] != nullptr) {
-  //     delete hashTable[i];
-  //   }
-  // }
-    
-      
-  // delete currentScope;
 }
 
 void SymbolTable::openScope() {
@@ -91,7 +76,7 @@ void SymbolTable::closeScope() {
   while (e != nullptr) {
     SymbolEntry * next = e->nextInScope;
     
-    hashTable[e->hashValue] = e->nextHash;
+    hashTable[e->hashValue] = e->nextInHashTable;
     delete e;
     e = next;
   }
@@ -100,58 +85,45 @@ void SymbolTable::closeScope() {
   delete t;
 }
 
-void SymbolTable::insertEntry(SymbolEntry *e) {
-  e->nextHash             = hashTable[e->hashValue];
-  hashTable[e->hashValue] = e;
-  e->nextInScope          = currentScope->entries;
-  currentScope->entries   = e;
-}
-
 template <class T>
-T *SymbolTable::newEntry(std::string name, unsigned lineno) {
-  SymbolEntry * e;
-    
-  for (e = currentScope->entries; e != nullptr; e = e->nextInScope)
-    if (name.compare(e->id) == 0) {
+T *SymbolTable::newEntry(std::string name, Type *type, unsigned lineno) {
+  SymbolEntry * e = lookupEntry<SymbolEntry>(name, false, lineno);
+
+  if (e != nullptr)
+    if (e->nestingLevel == currentScope->nestingLevel)
       Logger::error(lineno, "Duplicate identifier: %s", name.c_str());
-      return nullptr;
-    }
 
   T *newEntity = new T();
   newEntity->id = name;
+  newEntity->hashValue            = PJW_hash(name.c_str()) % hashTableSize;
+  newEntity->nestingLevel         = currentScope->nestingLevel;
+  newEntity->type                 = type;
+  newEntity->nextInHashTable      = hashTable[newEntity->hashValue];
+  hashTable[newEntity->hashValue] = newEntity;
+  newEntity->nextInScope          = currentScope->entries;
+  currentScope->entries           = newEntity;
 
-  newEntity->hashValue    = PJW_hash(name.c_str()) % hashTableSize;
-  newEntity->nestingLevel = currentScope->nestingLevel;
-  insertEntry(newEntity);
   return newEntity;
 }
 
 VarSymbolEntry *SymbolTable::newVariable(std::string name, Type *type, unsigned lineno) {
-  VarSymbolEntry * e = newEntry<VarSymbolEntry>(name, lineno);
+  VarSymbolEntry * e = newEntry<VarSymbolEntry>(name, type, lineno);
   
   if (e != nullptr) {
     e->entryType = ENTRY_VARIABLE;
-    e->type = type;
   }
   return e;
 }
 
 FunSymbolEntry *SymbolTable::newFunction(std::string name, Type *type, unsigned lineno) {
-  FunSymbolEntry * e = lookupEntry<FunSymbolEntry>(name, LOOKUP_CURRENT_SCOPE, false);
+  FunSymbolEntry * e = newEntry<FunSymbolEntry>(name, type, lineno);
 
-  if (e == nullptr) {
-    e = newEntry<FunSymbolEntry>(name);
-    if (e != nullptr) {
-      e->entryType = ENTRY_FUNCTION;
-      e->firstArgument = e->lastArgument = nullptr;
-      e->type = type;
-    }
-    return ((FunSymbolEntry*) e);
+  if (e != nullptr) {
+    e->entryType      = ENTRY_FUNCTION;
+    e->firstArgument  = e->lastArgument = nullptr;
+    e->status         = FunDefStatus::FUN_DEF_DEFINE;
   }
-  else {
-    Logger::error(lineno, "Duplicate identifier: %s", name.c_str());
-    return nullptr;
-  }
+  return e;
 }
 
 ParSymbolEntry *SymbolTable::newParameter(std::string name, Type *type, FunSymbolEntry *f, unsigned lineno) {
@@ -161,18 +133,16 @@ ParSymbolEntry *SymbolTable::newParameter(std::string name, Type *type, FunSymbo
     Logger::internal("Cannot add a parameter to a non-function");
   switch (f->status) {
     case FunDefStatus::FUN_DEF_DEFINE:
-      e = newEntry<ParSymbolEntry>(name, lineno);
+      e = newEntry<ParSymbolEntry>(name, type, lineno);
       if (e != nullptr) {
         e->entryType = ENTRY_PARAMETER;
-        e->id = name;
-        e->type = type;
-        e->next = nullptr;
+        e->nextParam = nullptr;
       }
       if (f->lastArgument == nullptr) {
         f->firstArgument = f->lastArgument = e;
       }
       else {
-        f->lastArgument->next = e;
+        f->lastArgument->nextParam = e;
         f->lastArgument = e;
       }
       return e;            
@@ -196,44 +166,16 @@ void SymbolTable::endFunctionDef(FunSymbolEntry *f, Type *type, unsigned lineno)
   f->status = FunDefStatus::FUN_DEF_COMPLETE;
 }
 
-SymbolEntry::~SymbolEntry() {}
-
-FunSymbolEntry::FunSymbolEntry() {
-  paramNum = 0;
-  status = FunDefStatus::FUN_DEF_DEFINE;
-}
-FunSymbolEntry::~FunSymbolEntry() {
-  // // TODO:
-  // ParSymbolEntry *args = this->firstArgument;
-  // while (args != nullptr) {
-  //   ParSymbolEntry * p = args;
-  //   args = args->next;
-  //   delete p;
-  // }
-}
-
-// TODO: does this implement search throw scopes correctly? 
 template <class T>
-T *SymbolTable::lookupEntry(std::string name, LookupType type, bool err, unsigned lineno) {
+T *SymbolTable::lookupEntry(std::string name, bool err, unsigned lineno) {
   unsigned int  hashValue = PJW_hash(name.c_str()) % hashTableSize;
   SymbolEntry * e         = hashTable[hashValue];
   
-  switch (type) {
-    case LOOKUP_CURRENT_SCOPE:
-      while (e != nullptr && e->nestingLevel == currentScope->nestingLevel)
-        if (name.compare(e->id) == 0)
-          return (T *)e;
-        else
-          e = e->nextHash;
-      break;
-    case LOOKUP_ALL_SCOPES:
-      while (e != nullptr)
-        if (name.compare(e->id) == 0)
-          return (T *)e;
-        else
-          e = e->nextHash;
-      break;
-  }
+  while (e != nullptr)
+    if (name.compare(e->id) == 0)
+      return (T *)e;
+    else
+      e = e->nextInHashTable;
   
   if (err)
     Logger::error(lineno, "Unknown identifier: %s", name.c_str());
