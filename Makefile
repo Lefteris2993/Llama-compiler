@@ -1,7 +1,7 @@
 .PHONY: clean distclean default
 
-CXX=c++
-CXXFLAGS=-Wall -std=c++11
+CXX=g++
+CXXFLAGS=-Wall -std=c++11 -O0 -ggdb3
 PYTHON=python3
 
 default: Llama

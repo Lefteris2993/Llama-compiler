@@ -6,6 +6,8 @@ tests = [
   ['hanoi.llama', True],
   ['bsort.llama', True],
   ['hello.llama', True],
+  ['dynamicMem.llama', True],
+  ['letin.llama', True],
   ['match.llama', False],       # different return types in clauses
   ['sameNames.llama', False],   # identifier re declaration
 ]

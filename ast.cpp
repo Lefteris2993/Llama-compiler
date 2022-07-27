@@ -137,7 +137,7 @@ void DimExpr::printOn(std::ostream &out) const {
   out << "Dim(" << dimension << "," << id << ")";
 }
 
-NewExpr::NewExpr(Type *t): type(t) {}
+NewExpr::NewExpr(Type *t) { type = new RefType(t);}
 NewExpr::~NewExpr() { delete type; }
 void NewExpr::printOn(std::ostream &out) const {
   out << "New(" << *type << ")"; 

@@ -1,0 +1,6 @@
+let a (i : int) = 
+  let b (i : char) = 42 in
+  let c (i : bool) = 17 in
+  b 'c' + c false + i
+
+let main = a 13

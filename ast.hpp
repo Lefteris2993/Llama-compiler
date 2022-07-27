@@ -223,7 +223,7 @@ private:
 
 class DimExpr: public Expr {
 public:
-  DimExpr(std::string i, unsigned c = -1);
+  DimExpr(std::string i, unsigned c = 1);
   virtual void sem() override;
   virtual void printOn(std::ostream &out) const override;
 private:
@@ -237,8 +237,6 @@ public:
   ~NewExpr();
   virtual void sem() override;
   virtual void printOn(std::ostream &out) const override;
-private:
-  Type *type;
 };
 
 class DeleteExpr: public Expr {

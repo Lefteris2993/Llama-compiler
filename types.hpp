@@ -48,13 +48,13 @@ private:
 
 class ArrayType: public Type {
 public:
-  ArrayType(Type *t, int s = -1);
+  ArrayType(Type *t, unsigned s = 1);
   ~ArrayType();
   virtual void printOn(std::ostream &out) const override;
   Type *getType();
-  int getStars();
+  unsigned getStars();
 private:
-  int stars;
+  unsigned stars;
   Type *type;
 };
 

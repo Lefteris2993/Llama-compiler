@@ -88,13 +88,13 @@ Type* FunctionType::getLeft() { return this->left; }
 Type* FunctionType::getRight() { return this->right; }
 
 
-ArrayType::ArrayType(Type *t, int s): stars(s), type(t) { classType = ARRAY; }
+ArrayType::ArrayType(Type *t, unsigned s): stars(s), type(t) { classType = ARRAY; }
 ArrayType::~ArrayType() { delete type; }
 void ArrayType::printOn(std::ostream &out) const {
   out << "ArrayType(" << stars << "," << *type << ")";
 }
 Type* ArrayType::getType() { return this->type; }
-int ArrayType::getStars() { return stars; }
+unsigned ArrayType::getStars() { return stars; }
 
 
 RefType::RefType(Type *t): type(t) { this->classType = REF; }

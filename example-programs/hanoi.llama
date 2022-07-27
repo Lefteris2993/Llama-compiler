@@ -1,11 +1,15 @@
-let main = 
-  let move source target =
+let read_int (a : unit) : int = 42 
+
+let print_string (msg : array of char) = ()
+
+let main : unit = 
+  let move (source : array of char) (target : array of char) : unit =
     print_string "Moving from: ";
     print_string source;
     print_string " to ";
     print_string target;
     print_string "\n" in
-  let rec hanoi rings source target auxil =
+  let rec hanoi (rings : int) (source : array of char) (target : array of char) (auxil : array of char) : unit =
     if rings > 0 then
     begin
       hanoi (rings-1) source auxil target;
@@ -13,5 +17,5 @@ let main =
       hanoi (rings-1) auxil target source
     end in
   print_string "Please, give the number of rings: ";
-  let n = read_int () in
+  let n : int = read_int () in
   hanoi n "left" "right" "middle"

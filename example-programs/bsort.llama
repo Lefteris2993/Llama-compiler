@@ -2,10 +2,10 @@ let print_string (msg : array of char) = ()
 
 let print_int (x: int) = ()
 
-let bsort (x : array [*] of int)  =
-  let swap x y =
+let bsort (x : array of int ref)  =
+  let swap (x : int ref) (y : int ref) =
     let t = !x in x := !y ; y := t in
-  let mutable changed in
+  let mutable changed : bool ref in
   changed := true;
   while !changed do
     changed := false;
@@ -19,7 +19,7 @@ let bsort (x : array [*] of int)  =
   done
 
 let main = 
-  let print_array msg x = 
+  let print_array (msg : array of char) (x : array of int ref) = 
     print_string msg;
     for i = 0 to dim x - 1 do
       if i > 0 then print_string ", ";
@@ -27,8 +27,8 @@ let main =
     done;
     print_string "\n" in
 
-  let mutable seed
-  and mutable x[16] in
+  let mutable seed : int ref
+  and mutable x[16] : array of int ref in
 
   seed := 65;
   for i = 0 to 15 do

@@ -2,7 +2,7 @@
 
 extern SymbolTable *symbolTable;
 
-void AST::sem() { std::cout << "not implemented\n"; } // TODO: change this to so all classes have to implement this.
+void AST::sem() { /* Do nothing */ }
 
 void ExprBlock::sem() {
   for (Expr *c : block) {
@@ -21,6 +21,11 @@ void BoolPattern::sem() { type = boolType; }
 
 void VarPattern::sem() {
   SymbolEntry *s = symbolTable->lookupEntry<SymbolEntry>(var, true, lineno);
+  if (
+    s->entryType == EntryType::ENTRY_FUNCTION &&
+    ((FunSymbolEntry *) s)->paramNum != 0
+  )
+    Logger::error(lineno, "\"%s\" is function", s->id.c_str());
   type = s->type;
 }
 
@@ -47,7 +52,6 @@ void ClauseBlock::sem() {
 }
 
 void BinOpExpr::sem() {
-  // TODO: complete for all operators
   lhs->sem();
   rhs->sem();
 
@@ -77,6 +81,8 @@ void BinOpExpr::sem() {
   case STRUCT_NE:
   case EQ:
   case NE:
+  case AND:
+  case OR:
     if (
       !Type::equal_types(l, r) ||
       (!Type::equal_types(l, boolType) && !Type::equal_types(l, intType))
@@ -84,7 +90,21 @@ void BinOpExpr::sem() {
       Logger::error(lineno, "Operands must be of type INT or BOOL");
     }
     type = boolType;
+    break;
 
+  case ASS:
+    if (lhs->getType() == nullptr)
+      Logger::error(lineno, "Expresion has unkown type");
+    if (lhs->getType()->getClassType() != TypeClassType::REF) 
+      Logger::error(lineno, "Left side of operator \":=\" is not a reference type");
+    if (!Type::equal_types(((RefType *) lhs->getType())->getType(), rhs->getType()))
+      Logger::error(lineno, "Left and right side of assignment operator \":=\" have not the same type");
+    
+    type = unitType;
+    break;
+
+  case PAR:
+    type = rhs->getType();
     break;
   
   default:
@@ -136,7 +156,12 @@ void LetDef::sem() {
   else defBlock->sem(); 
 }
 
-void LetInExpr::sem() { /*TODO: */ }
+void LetInExpr::sem() {
+  let->sem();
+  expr->sem();
+
+  type = expr->getType();
+}
 
 void WhileExpr::sem() {
   cond->sem();
@@ -153,13 +178,46 @@ void WhileExpr::sem() {
   type = unitType;
 }
 
-void ForExpr::sem() { /*TODO: */ }
+void ForExpr::sem() {
+  symbolTable->openScope();
+  symbolTable->newVariable(id, intType, lineno);
+  to->sem();
+  if (!Type::equal_types(to->getType(), intType))
+    Logger::error(lineno, "For target must be of type INT");
 
-void DimExpr::sem() { /*TODO: */ }
+  body->sem();
+  type = unitType;
+  symbolTable->closeScope();
+}
 
-void NewExpr::sem() { /*TODO: */ }
+void DimExpr::sem() {
+  VarSymbolEntry *e = symbolTable->lookupEntry<VarSymbolEntry>(id, true, lineno);
+  
+  if (
+    e->entryType == EntryType::ENTRY_FUNCTION &&
+    ((FunSymbolEntry *) e)->paramNum != 0
+  )
+    Logger::error(lineno, "\"%s\" is function", e->id.c_str());
 
-void DeleteExpr::sem() { /*TODO: */ }
+  if (e->type->getClassType() != TypeClassType::ARRAY)
+    Logger::error(lineno, "Can not get \"dim\" of non array variable");
+
+  if (dimension > ((ArrayType *) e->type)->getStars())
+    Logger::error(lineno, "Array \"%s\" has only %d dimensions", id.c_str(), ((ArrayType *) e->type)->getStars());
+
+  type = intType;
+}
+
+void NewExpr::sem() { /* Do Nothing */ }
+
+void DeleteExpr::sem() {
+  expr->sem();
+  if (expr->getType() == nullptr)
+    Logger::error(lineno, "Expresion has unkown type");
+  if (expr->getType()->getClassType() != TypeClassType::REF)
+    Logger::error(lineno, "Can not delete non REF type");
+  type = unitType;
+}
 
 void IfThenElseExpr::sem() {
   cond->sem();
@@ -190,7 +248,15 @@ void MatchExpr::sem() {
   block->sem();
 }
 
-void DeRefHighPrioExpr::sem() { /*TODO: */ }
+void DeRefHighPrioExpr::sem() {
+  expr->sem();
+  if (expr->getType() == nullptr)
+    Logger::error(lineno, "Expresion has unkown type");
+  if (expr->getType()->getClassType() != TypeClassType::REF)
+    Logger::error(lineno, "Can not de-reference non REF type");
+
+  type = ((RefType *) expr->getType())->getType();
+}
 
 void UnitHighPrioExpr::sem() { type = unitType; }
 
@@ -204,7 +270,20 @@ void BoolHighPrioExpr::sem() { type = boolType; }
 
 void IdHighPrioExpr::sem() {
   SymbolEntry *s = symbolTable->lookupEntry<SymbolEntry>(id, true, lineno);
-  type = s->type;
+  if (
+    s->entryType == EntryType::ENTRY_FUNCTION &&
+    ((FunSymbolEntry *) s)->paramNum != 0
+  )
+    Logger::error(lineno, "\"%s\" is function", s->id.c_str());
+
+  if (commaExprList != nullptr) {
+    if (s->type->getClassType() != TypeClassType::ARRAY )
+      Logger::error(lineno, "\"%s\" is not an array", s->id.c_str());
+
+    type = ((ArrayType *) s->type)->getType();
+  } else {
+    type = s->type;
+  }
 }
 
 void HighPrioExprBlock::sem() {
@@ -222,6 +301,10 @@ void StmtBlock::sem() {
 }
 
 void MutableDef::sem() {
+  if (type == nullptr)
+    Logger::error(lineno, "Definition of \"%s\" does not contain a type", id.c_str());
+  if (type->getClassType() != TypeClassType::REF)
+    Logger::error(lineno, "Mutable \"%s\" must be a REF type", id.c_str());
   symbolTable->newVariable(id, type, lineno);
 }
 

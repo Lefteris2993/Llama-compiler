@@ -21,7 +21,9 @@
 void Templates() {
   SymbolTable *s = new SymbolTable(42);
   s->lookupEntry<SymbolEntry>("", false);
+  s->lookupEntry<VarSymbolEntry>("", false);
   s->lookupEntry<FunSymbolEntry>("", false);
+  s->lookupEntry<ParSymbolEntry>("", false);
 }
 
 typedef unsigned long int HashType;
