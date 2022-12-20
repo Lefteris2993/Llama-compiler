@@ -162,7 +162,7 @@ void SymbolTable::endFunctionDef(FunSymbolEntry *f, Type *type, unsigned lineno)
       Logger::internal("Cannot end parameters in an already defined function");
       break;
     case FunDefStatus::FUN_DEF_DEFINE:
-      f->type = type;
+      f->returnType = type;
       break;
   }
   f->status = FunDefStatus::FUN_DEF_COMPLETE;

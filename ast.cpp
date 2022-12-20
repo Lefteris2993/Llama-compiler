@@ -281,16 +281,29 @@ void ParBlock::printOn(std::ostream &out) const {
   out << ")";
 }
 
-ImmutableDef::ImmutableDef(
+ImmutableDefFunc::ImmutableDefFunc(
   std::string i,
   ParBlock *p,  
   Expr *e, 
   Type *t
 ): id(i), expr(e), block(p), type(t) {}
-ImmutableDef::~ImmutableDef() { delete expr; delete block; delete type; }
-DefType ImmutableDef::getDefType() const { return DefType::DEF_IMMUTABLE; }
-void ImmutableDef::printOn(std::ostream &out) const {
-  out << "ImmutableDef(" << id << "," << *expr << "," << *block;
+ImmutableDefFunc::~ImmutableDefFunc() { delete expr; delete block; delete type; }
+DefType ImmutableDefFunc::getDefType() const { return DefType::DEF_IMMUTABLE_FUN; }
+void ImmutableDefFunc::printOn(std::ostream &out) const {
+  out << "ImmutableDefFunc(" << id << "," << *expr << "," << *block;
+  if (type != nullptr) out << "," << *type; 
+  out << ")";
+}
+
+ImmutableDefVar::ImmutableDefVar(
+  std::string i,
+  Expr *e, 
+  Type *t
+): id(i), expr(e), type(t) {}
+ImmutableDefVar::~ImmutableDefVar() { delete expr; delete type; }
+DefType ImmutableDefVar::getDefType() const { return DefType::DEF_IMMUTABLE_VAR; }
+void ImmutableDefVar::printOn(std::ostream &out) const {
+  out << "ImmutableDefVar(" << id << "," << *expr;
   if (type != nullptr) out << "," << *type; 
   out << ")";
 }

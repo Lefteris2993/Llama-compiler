@@ -25,7 +25,7 @@ void VarPattern::sem() {
     s->entryType == EntryType::ENTRY_FUNCTION &&
     ((FunSymbolEntry *) s)->paramNum != 0
   )
-    Logger::error(lineno, "\"%s\" is function", s->id.c_str());
+    Logger::error(lineno, "\"%s\" is function 1", s->id.c_str());
   type = s->type;
 }
 
@@ -139,15 +139,15 @@ void SigOpExpr::sem() {
 void DefBlock::sem() {
   for (Def *d : block) {
     d->sem();
-    if (d->getDefType() == DefType::DEF_IMMUTABLE) ((ImmutableDef *) d)->decl();
-  } 
+    if (d->getDefType() == DefType::DEF_IMMUTABLE_FUN) ((ImmutableDefFunc *) d)->decl();
+  }
 }
 void DefBlock::recSem() {
   for (Def *d : block) 
     d->sem();
   for (Def *d : block) 
-    if (d->getDefType() == DefType::DEF_IMMUTABLE)
-      ((ImmutableDef *) d)->decl();
+    if (d->getDefType() == DefType::DEF_IMMUTABLE_FUN)
+      ((ImmutableDefFunc *) d)->decl();
 }
 
 
@@ -197,7 +197,7 @@ void DimExpr::sem() {
     e->entryType == EntryType::ENTRY_FUNCTION &&
     ((FunSymbolEntry *) e)->paramNum != 0
   )
-    Logger::error(lineno, "\"%s\" is function", e->id.c_str());
+    Logger::error(lineno, "\"%s\" is function 2", e->id.c_str());
 
   if (e->type->getClassType() != TypeClassType::ARRAY)
     Logger::error(lineno, "Can not get \"dim\" of non array variable");
@@ -270,11 +270,6 @@ void BoolHighPrioExpr::sem() { type = boolType; }
 
 void IdHighPrioExpr::sem() {
   SymbolEntry *s = symbolTable->lookupEntry<SymbolEntry>(id, true, lineno);
-  if (
-    s->entryType == EntryType::ENTRY_FUNCTION &&
-    ((FunSymbolEntry *) s)->paramNum != 0
-  )
-    Logger::error(lineno, "\"%s\" is function", s->id.c_str());
 
   if (commaExprList != nullptr) {
     if (s->type->getClassType() != TypeClassType::ARRAY )
@@ -324,22 +319,48 @@ void ParBlock::insertParams(FunSymbolEntry *f) {
   for (Par *p : block) p->insertParam(f);
 }
 
-void ImmutableDef::sem() {
-  FunSymbolEntry *f = symbolTable->newFunction(id, type, lineno);
-  f->paramNum = block->block.size();
-  f->paramTypes = new Type *[block->block.size()];
-  for (unsigned i = 0; i < block->block.size(); i++) {
+void ImmutableDefVar::sem() {
+  VarSymbolEntry *v = symbolTable->newVariable(id, type, lineno);
+
+  expr->sem();
+  if (type != nullptr) {
+    bool sameTypes = Type::equal_types(v->type, expr->getType());
+    if (!sameTypes) Logger::error(lineno, "variable %s is not of specified type", id.c_str());    
+  } else {
+    v->type = type = expr->getType();
+  }
+
+}
+
+void ImmutableDefFunc::sem() {
+  const int blockSize = block->block.size();
+
+  // create function type
+  Type *prevType = type;
+  FunctionType *funcType;
+  for (int i = blockSize - 1; i >= 0; i--) {
+    Type *currType = block->block[i]->getType();
+    funcType = new FunctionType(currType, prevType);
+    prevType = funcType;
+  }
+
+  // create symbol entry
+  FunSymbolEntry *f = symbolTable->newFunction(id, funcType == nullptr ? type : funcType, lineno);
+  f->paramNum = blockSize;
+  f->returnType = type;
+  f->paramTypes = new Type *[blockSize];
+  for (int i = 0; i < blockSize; i++) {
     f->paramTypes[i] = block->block[i]->getType();
   }
 }
-void ImmutableDef::decl() {
+void ImmutableDefFunc::decl() {
   FunSymbolEntry *f = symbolTable->lookupEntry<FunSymbolEntry>(id, false, lineno);
   symbolTable->openScope();
   block->insertParams(f);
 
   expr->sem();
   if (type != nullptr) {
-    bool sameTypes = Type::equal_types(type, expr->getType());
+    bool sameTypes = Type::equal_types(f->returnType, expr->getType());
     if (!sameTypes) Logger::error(lineno, "Function does not return specified type");
   }
   if (type == nullptr) type = expr->getType();
@@ -359,5 +380,5 @@ void FunctionCall::sem() {
   block->sem();
   block->parCheck(f);
 
-  type = f->type;
+  type = f->returnType;
 }

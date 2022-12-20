@@ -2,11 +2,12 @@ import os
 
 # fileName, should pass
 tests = [
+  ['bsort.llama', True],
+  ['defThenUse.llama', True],
+  ['dynamicMem.llama', True],
   ['evenOdd.llama', True],
   ['hanoi.llama', True],
-  ['bsort.llama', True],
   ['hello.llama', True],
-  ['dynamicMem.llama', True],
   ['letin.llama', True],
   ['match.llama', False],       # different return types in clauses
   ['sameNames.llama', False],   # identifier re declaration

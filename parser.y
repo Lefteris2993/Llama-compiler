@@ -154,8 +154,10 @@ def_list:
 ;
 
 def:
-  T_id par_list '=' expr                            { $$ = new ImmutableDef(*$1, $2, $4); $$->setLineno(yylineno); }
-| T_id par_list ':' type '=' expr                   { $$ = new ImmutableDef(*$1, $2, $6, $4); $$->setLineno(yylineno); }
+  T_id '=' expr                                     { $$ = new ImmutableDefVar(*$1, $3); $$->setLineno(yylineno); }
+| T_id ':' type '=' expr                            { $$ = new ImmutableDefVar(*$1, $5, $3); $$->setLineno(yylineno); }
+| T_id par_list '=' expr                            { $$ = new ImmutableDefFunc(*$1, $2, $4); $$->setLineno(yylineno); }
+| T_id par_list ':' type '=' expr                   { $$ = new ImmutableDefFunc(*$1, $2, $6, $4); $$->setLineno(yylineno); }
 | "mutable" T_id                                    { $$ = new MutableDef(*$2); $$->setLineno(yylineno); }
 | "mutable" T_id ':' type                           { $$ = new MutableDef(*$2, $4); $$->setLineno(yylineno); }
 | "mutable" T_id '[' comma_expr_list ']'            { $$ = new MutableArrayDef(*$2, $4); $$->setLineno(yylineno); }
@@ -163,7 +165,7 @@ def:
 ;
 
 par_list:
-  /* nothing */ { $$ = new ParBlock(); $$->setLineno(yylineno); }
+  par           { ParBlock *b = new ParBlock(); b->append($1); $$ = b; $$->setLineno(yylineno); }
 | par_list par  { $1->append($2); $$ = $1; $$->setLineno(yylineno); }
 ;
 

@@ -56,6 +56,7 @@ struct FunSymbolEntry: SymbolEntry {
   ParSymbolEntry *lastArgument;
   FunDefStatus status;
   unsigned paramNum;
+  Type *returnType;
   Type **paramTypes;
 };
 

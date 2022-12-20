@@ -1,0 +1,7 @@
+let a : int = 42
+
+let identityFunction (x : int) : int = x
+
+let clone : (int -> int) = identityFunction
+
+let result : int = identityFunction a

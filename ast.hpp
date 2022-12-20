@@ -13,7 +13,7 @@ enum BinOp { BIN_PLUS, BIN_MINUS, STAR, DIV, MOD, STRUCT_EQ, STRUCT_NE, L, G, LE
 
 enum SigOp { NOT, SIG_PLUS, SIG_MINUS, EXCL };
 
-enum DefType { DEF_MUTABLE, DEF_IMMUTABLE, DEF_ARRAY };
+enum DefType { DEF_MUTABLE, DEF_IMMUTABLE_FUN, DEF_IMMUTABLE_VAR, DEF_ARRAY };
 
 extern Type *intType;
 extern Type *unitType;
@@ -416,10 +416,24 @@ public:
   std::vector<Par *> block;
 };
 
-class ImmutableDef: public Def {
+class ImmutableDefVar: public Def {
 public:
-  ImmutableDef(std::string i, ParBlock *p, Expr *e, Type *t = nullptr);
-  ~ImmutableDef();
+  ImmutableDefVar(std::string i, Expr *e, Type *t = nullptr);
+  ~ImmutableDefVar();
+  virtual DefType getDefType() const override;
+  virtual void sem() override;
+  virtual void printOn(std::ostream &out) const override;
+
+private:
+  std::string id;
+  Expr *expr;
+  Type *type;
+};
+
+class ImmutableDefFunc: public Def {
+public:
+  ImmutableDefFunc(std::string i, ParBlock *p, Expr *e, Type *t = nullptr);
+  ~ImmutableDefFunc();
   virtual DefType getDefType() const override;
   virtual void sem() override;
   void decl();
