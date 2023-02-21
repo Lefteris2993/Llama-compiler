@@ -1,7 +1,9 @@
 .PHONY: clean distclean default
 
-CXX=g++
-CXXFLAGS=-Wall -std=c++11 -O0 -ggdb3
+LLVMCONFIG=llvm-config
+CXX=clang++
+CXXFLAGS=-Wall -std=c++11 -g `$(LLVMCONFIG) --cxxflags`
+LDFLAGS=`$(LLVMCONFIG) --ldflags --system-libs --libs all`
 PYTHON=python3
 
 default: Llama
@@ -27,7 +29,7 @@ error.o: error.cpp error.hpp parser.hpp
 symbol.o: symbol.cpp symbol.hpp
 
 Llama: error.o ast.o types.o symbol.o sem.o lexer.o parser.o
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 test: Llama
 	$(PYTHON) runTests.py

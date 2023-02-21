@@ -1,0 +1,4 @@
+let fun (a: int) =
+  a + b
+
+let b = fun (42)
