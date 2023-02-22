@@ -9,7 +9,8 @@ files = [
  'hello',
  'letin',
  'match',
- 'sameNames',   
+ 'sameNames',
+ 'variableNotDeclared', 
 ]
 
 for f in files:

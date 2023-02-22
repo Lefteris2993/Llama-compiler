@@ -9,8 +9,9 @@ tests = [
   ['hanoi.llama', True],
   ['hello.llama', True],
   ['letin.llama', True],
-  ['match.llama', False],       # different return types in clauses
-  ['sameNames.llama', False],   # identifier re declaration
+  ['match.llama', False],                   # different return types in clauses
+  ['sameNames.llama', False],               # identifier re declaration
+  ['variableNotDeclared.llama', False],     #Unknown identifier: b
 ]
 
 for [test, shouldPass] in tests:
