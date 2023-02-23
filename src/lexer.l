@@ -1,6 +1,7 @@
 %option noyywrap
 %option nounput
 %option yylineno
+%option noinput
 %{
 #include "src/ast/ast.hpp"
 #include "src/lexer.hpp"

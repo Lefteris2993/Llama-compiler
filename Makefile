@@ -1,9 +1,5 @@
 .PHONY: clean distclean default
 
-SOURCES = $(shell find src/ast src/error src/symbol src/types -name '*.cpp')
-HEADERS = $(shell find src/ast src/error src/symbol src/types -name '*.hpp')
-OBJ = ${SOURCES:.cpp=.o}
-
 LLVMCONFIG=llvm-config
 CXX=clang++
 CXXFLAGS=-Wall -std=c++11 -g #`$(LLVMCONFIG) --cxxflags`
@@ -25,10 +21,19 @@ parser.o: parser.cpp src/lexer.hpp src/ast/ast.hpp src/types/types.hpp src/error
 # %.o: %.cpp ${HEADERS} parser.hpp
 # 	${CXX} ${CXXFLAGS} ${LDFLAGS} -c $< -o $@
 
-%.o: %.cpp ${HEADERS} parser.hpp
+ast.o: src/ast/ast.cpp src/ast/ast.hpp 
 	${CXX} ${CXXFLAGS} -c $< -o $@
 
-Llama: ${OBJ} parser.o lexer.o
+error.o: src/error/error.cpp src/error/error.hpp parser.hpp
+	${CXX} ${CXXFLAGS} -c $< -o $@
+
+symbol.o: src/symbol/symbol.cpp src/symbol/symbol.hpp
+	${CXX} ${CXXFLAGS} -c $< -o $@
+
+types.o: src/types/types.cpp src/types/types.hpp
+	${CXX} ${CXXFLAGS} -c $< -o $@
+
+Llama: ast.o error.o symbol.o types.o parser.o lexer.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 test: Llama

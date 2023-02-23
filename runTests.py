@@ -14,9 +14,14 @@ tests = [
   ['variableNotDeclared.llama', False],     #Unknown identifier: b
 ]
 
+failed = 0
+
 for [test, shouldPass] in tests:
   os.system(f"./Llama < ./example-programs/{test} > .test.temp 2>&1")
   with open(".test.temp") as f:
     lines = f.readlines()
     if (not lines) != (shouldPass):
+      failed = failed + 1
       print(f"{test}: failed with output: {lines}")
+
+print(f"Passed: {len(tests) - failed}. Failed: {failed}")
