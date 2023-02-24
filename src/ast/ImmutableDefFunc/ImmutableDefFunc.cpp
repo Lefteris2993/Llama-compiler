@@ -25,7 +25,7 @@ void ImmutableDefFunc::sem() {
 
   // create function type
   Type *prevType = type;
-  FunctionType *funcType;
+  FunctionType *funcType = nullptr;
   for (int i = blockSize - 1; i >= 0; i--) {
     Type *currType = block->block[i]->getType();
     funcType = new FunctionType(currType, prevType);

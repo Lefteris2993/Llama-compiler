@@ -1,10 +1,12 @@
 .PHONY: clean distclean default
 
-LLVMCONFIG=llvm-config
+LLVMCONFIG=llvm-config-11
 CXX=clang++
-CXXFLAGS=-Wall -std=c++11 -g #`$(LLVMCONFIG) --cxxflags`
+CXXFLAGS=-Wall -std=c++11 -g `$(LLVMCONFIG) --cxxflags`
 LDFLAGS=`$(LLVMCONFIG) --ldflags --system-libs --libs all`
 PYTHON=python3
+
+AST_SOURCES = $(shell find src/ast -name '*.cpp')
 
 default: Llama
 
@@ -21,7 +23,7 @@ parser.o: parser.cpp src/lexer.hpp src/ast/ast.hpp src/types/types.hpp src/error
 # %.o: %.cpp ${HEADERS} parser.hpp
 # 	${CXX} ${CXXFLAGS} ${LDFLAGS} -c $< -o $@
 
-ast.o: src/ast/ast.cpp src/ast/ast.hpp 
+ast.o: src/ast/ast.cpp src/ast/ast.hpp ${AST_SOURCES}
 	${CXX} ${CXXFLAGS} -c $< -o $@
 
 error.o: src/error/error.cpp src/error/error.hpp parser.hpp
