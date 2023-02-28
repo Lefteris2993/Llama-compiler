@@ -25,3 +25,12 @@ void FunctionCall::sem() {
 
   type = f->returnType;
 }
+
+llvm::Value* FunctionCall::codegen() {
+  llvm::Function *CalleeF = TheModule->getFunction(id);
+  std::vector<llvm::Value*> ArgsV = block->getArgs();
+
+  Builder.CreateCall(CalleeF, ArgsV, "call_" + id);
+
+  return nullptr;
+}

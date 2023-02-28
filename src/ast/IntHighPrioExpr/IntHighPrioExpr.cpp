@@ -8,3 +8,6 @@ void IntHighPrioExpr::printOn(std::ostream &out) const {
 
 void IntHighPrioExpr::sem() { type = intType; }
 
+llvm::Value* IntHighPrioExpr::codegen() {
+  return c32(val);
+}

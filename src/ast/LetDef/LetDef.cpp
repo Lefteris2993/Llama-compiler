@@ -16,3 +16,8 @@ void LetDef::sem() {
   if (rec) defBlock->recSem();
   else defBlock->sem(); 
 }
+
+llvm::Value* LetDef::codegen() {
+  defBlock->codegen();
+  return nullptr;
+}

@@ -32,3 +32,8 @@ void DefBlock::recSem() {
     if (d->getDefType() == DefType::DEF_IMMUTABLE_FUN)
       ((ImmutableDefFunc *) d)->decl();
 }
+
+llvm::Value* DefBlock::codegen() {
+  for (Def *d : block) d->codegen();
+  return nullptr;
+}

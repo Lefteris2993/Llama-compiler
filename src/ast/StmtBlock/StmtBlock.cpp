@@ -20,3 +20,8 @@ void StmtBlock::printOn(std::ostream &out) const {
 void StmtBlock::sem() {
   for (Stmt *s : stmt_list) s->sem();
 }
+
+llvm::Value* StmtBlock::codegen() {
+  for (Stmt *s : stmt_list) s->codegen();
+  return nullptr;
+}

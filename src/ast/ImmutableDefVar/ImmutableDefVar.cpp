@@ -30,5 +30,11 @@ void ImmutableDefVar::sem() {
   } else {
     v->type = type = expr->getType();
   }
+}
 
+llvm::Value* ImmutableDefVar::codegen() {
+  expr->codegen();
+  // then give result to variable with id
+
+  return nullptr;
 }

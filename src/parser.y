@@ -6,6 +6,7 @@
 #include "src/ast/ast.hpp"
 #include "src/lexer.hpp"
 #include "src/symbol/symbol.hpp"
+#include "src/library/library.hpp"
 
 extern Type *intType;
 extern Type *unitType;
@@ -277,7 +278,10 @@ pattern:
 int main () {
   symbolTable = new SymbolTable(42);
   symbolTable->openScope();
+  Library::insertFunctionsToScope(symbolTable);
+  symbolTable->openScope();
   int result = yyparse();
+  symbolTable->closeScope();
   symbolTable->closeScope();
   delete symbolTable;
   return result;

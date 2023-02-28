@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <llvm/IR/Value.h>
 
 #include "../Expr/Expr.hpp"
 #include "../../symbol/symbol.hpp"
@@ -16,6 +17,7 @@ public:
   void parCheck(FunSymbolEntry *f);
   virtual void printOn(std::ostream &out) const override;
   unsigned getBlockLength();
+  std::vector<llvm::Value*> getArgs();
 
 private:
   std::vector<HighPrioExpr *> block;

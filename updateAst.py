@@ -11,6 +11,7 @@ files = [
  'match',
  'sameNames',
  'variableNotDeclared', 
+ 'printInt'
 ]
 
 for f in files:

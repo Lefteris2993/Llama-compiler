@@ -16,6 +16,10 @@ llvm::Type* AST::i8;
 llvm::Type* AST::i32;
 llvm::Type* AST::i64;
 
+llvm::Function *AST::TheWriteString;
+llvm::Function *AST::TheWriteInteger;
+llvm::Function *AST::ThePrintIntInternal;
+
 AST::~AST() {}
 
 void AST::setLineno(unsigned l) { this->lineno = l; }
@@ -54,7 +58,10 @@ void AST::llvm_compile_and_dump(bool optimize) {
   Builder.SetInsertPoint(BB);
 
   // Emit the program code.
-  codegen();
+  // codegen();
+
+  llvm::Value *n64 = Builder.CreateSExt(c32(42), i64, "ext");
+  Builder.CreateCall(TheWriteInteger, {n64});
 
   Builder.CreateRet(c32(0));
 
@@ -86,5 +93,38 @@ llvm::ConstantInt* AST::c64(int n) {
 }
 
 void AST::codegenLibs() {
-  // TODO
+  /* create unit struct (type opaque -> no body) */
+  std::string unitName = "unit";
+  llvm::StructType *unitType = llvm::StructType::create(TheContext, unitName);
+  std::vector<llvm::Type *> emptyBody;
+  // emptyBody.push_back(i1);
+  unitType->setBody(emptyBody);
+
+  /* writeString - lib.a */
+  llvm::FunctionType *writeString_type =
+    llvm::FunctionType::get(llvm::Type::getVoidTy(TheContext),
+                      {llvm::PointerType::get(i8, 0)}, false);
+  TheWriteString =
+    llvm::Function::Create(writeString_type, llvm::Function::ExternalLinkage,
+                      "writeString", TheModule.get());
+
+  /* writeInteger - lib.a */
+  llvm::FunctionType *writeInteger_type =
+    llvm::FunctionType::get(llvm::Type::getVoidTy(TheContext), { i64 }, false);
+  TheWriteInteger =
+    llvm::Function::Create(writeInteger_type, llvm::Function::ExternalLinkage,
+                  "writeInteger", TheModule.get());
+
+    
+  /* print_int */
+  // llvm::FunctionType *printInt_type = 
+  //   llvm::FunctionType::get(TheModule->getTypeByName("unit"), { i32 }, false);
+  // ThePrintIntInternal =
+  //   llvm::Function::Create(printInt_type, llvm::Function::InternalLinkage,
+  //                 "print_int", TheModule.get());
+  // llvm::BasicBlock *ThePrintIntBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", ThePrintIntInternal);
+  // Builder.SetInsertPoint(ThePrintIntBB);
+  // Builder.CreateCall(TheWriteInteger, { ThePrintIntInternal->getArg(0) });
+  // Builder.CreateRet(llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit")));
+  // TheFPM->run(*ThePrintIntInternal);
 }

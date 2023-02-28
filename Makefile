@@ -2,7 +2,7 @@
 
 LLVMCONFIG=llvm-config-11
 CXX=clang++
-CXXFLAGS=-Wall -std=c++11 -g `$(LLVMCONFIG) --cxxflags`
+CXXFLAGS=-Wall -std=c++11 -g -O0 -ggdb3 `$(LLVMCONFIG) --cxxflags`
 LDFLAGS=`$(LLVMCONFIG) --ldflags --system-libs --libs all`
 PYTHON=python3
 
@@ -18,7 +18,7 @@ lexer.o: lexer.cpp src/lexer.hpp parser.hpp src/ast/ast.hpp src/error/error.hpp
 parser.hpp parser.cpp: src/parser.y
 	bison -dv -o parser.cpp src/parser.y
 
-parser.o: parser.cpp src/lexer.hpp src/ast/ast.hpp src/types/types.hpp src/error/error.hpp src/symbol/symbol.hpp
+parser.o: parser.cpp src/lexer.hpp src/ast/ast.hpp src/types/types.hpp src/error/error.hpp src/symbol/symbol.hpp src/library/library.hpp
 
 # %.o: %.cpp ${HEADERS} parser.hpp
 # 	${CXX} ${CXXFLAGS} ${LDFLAGS} -c $< -o $@
@@ -35,7 +35,10 @@ symbol.o: src/symbol/symbol.cpp src/symbol/symbol.hpp
 types.o: src/types/types.cpp src/types/types.hpp
 	${CXX} ${CXXFLAGS} -c $< -o $@
 
-Llama: ast.o error.o symbol.o types.o parser.o lexer.o
+library.o: src/library/library.cpp src/library/library.hpp
+	${CXX} ${CXXFLAGS} -c $< -o $@
+
+Llama: ast.o error.o symbol.o types.o parser.o lexer.o library.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 test: Llama

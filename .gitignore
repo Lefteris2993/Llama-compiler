@@ -8,3 +8,7 @@ Llama
 temp
 *.temp
 *.ast
+*.s
+*.ll
+*.out
+*.asm

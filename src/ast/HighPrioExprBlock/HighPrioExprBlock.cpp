@@ -30,3 +30,11 @@ void HighPrioExprBlock::parCheck(FunSymbolEntry *f) {
       Logger::error(lineno, "Argument in position %d is NOT of correct type in function \"%s\"", i, f->id.c_str());
   }
 }
+
+std::vector<llvm::Value*> HighPrioExprBlock::getArgs() {
+  std::vector<llvm::Value *> args;
+  for (HighPrioExpr *e : block){
+    args.push_back(e->codegen());
+  }
+  return args;
+}
