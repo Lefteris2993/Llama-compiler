@@ -6,6 +6,8 @@
 #include <llvm/Transforms/Utils.h>
 #include <llvm/IR/Verifier.h>
 
+std::unique_ptr<SymbolTable> AST::LLVMValueStore;
+
 llvm::LLVMContext AST::TheContext;
 llvm::IRBuilder<> AST::Builder(TheContext);
 std::unique_ptr<llvm::Module> AST::TheModule;
@@ -44,6 +46,9 @@ void AST::llvm_compile_and_dump(bool optimize) {
   i32 = llvm::IntegerType::get(TheContext, 32);
   i64 = llvm::IntegerType::get(TheContext, 64);
 
+  LLVMValueStore = std::make_unique<SymbolTable>(42);
+  LLVMValueStore->openScope();
+
   this->codegenLibs();
 
   // Defint and start the main function.
@@ -58,7 +63,11 @@ void AST::llvm_compile_and_dump(bool optimize) {
   Builder.SetInsertPoint(BB);
 
   // Emit the program code.
+  LLVMValueStore->openScope();
   codegen();
+
+  LLVMValueStore->closeScope();
+  LLVMValueStore->closeScope();
 
   Builder.CreateRet(c32(0));
 
@@ -124,4 +133,6 @@ void AST::codegenLibs() {
   Builder.CreateCall(TheWriteInteger, { ThePrintIntInternal->getArg(0) });
   Builder.CreateRet(llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit")));
   TheFPM->run(*ThePrintIntInternal);
+  // is this needed here?
+  // LLVMValueStore->newLLVMValue("print_int", ThePrintIntInternal);
 }

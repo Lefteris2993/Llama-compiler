@@ -24,6 +24,7 @@ void Templates() {
   s->lookupEntry<VarSymbolEntry>("", false);
   s->lookupEntry<FunSymbolEntry>("", false);
   s->lookupEntry<ParSymbolEntry>("", false);
+  s->lookupEntry<LLVMSymbolEntry>("", false);
 }
 
 typedef unsigned long int HashType;
@@ -152,6 +153,16 @@ ParSymbolEntry *SymbolTable::newParameter(std::string name, Type *type, FunSymbo
       Logger::fatal("Cannot add a parameter to an already defined function");
   }
   return nullptr;
+}
+
+LLVMSymbolEntry *SymbolTable::newLLVMValue(std::string name, llvm::Value *v, unsigned lineno) {
+    LLVMSymbolEntry * e = newEntry<LLVMSymbolEntry>(name, nullptr, lineno);
+
+    if (e != nullptr) {
+      e->entryType      = ENTRY_LLVM;
+      e->value          = v;
+    }
+    return e;
 }
 
 void SymbolTable::endFunctionDef(FunSymbolEntry *f, Type *type, unsigned lineno) {

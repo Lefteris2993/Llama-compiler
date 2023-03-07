@@ -33,8 +33,8 @@ void ImmutableDefVar::sem() {
 }
 
 llvm::Value* ImmutableDefVar::codegen() {
-  expr->codegen();
-  // then give result to variable with id
+  llvm::Value *v = expr->codegen();
+  LLVMValueStore->newLLVMValue(id, v);
 
-  return nullptr;
+  return v;
 }

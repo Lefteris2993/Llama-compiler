@@ -26,3 +26,9 @@ void IdHighPrioExpr::sem() {
     type = s->type;
   }
 }
+
+llvm::Value* IdHighPrioExpr::codegen() {
+  LLVMSymbolEntry *v  = LLVMValueStore->lookupEntry<LLVMSymbolEntry>(id, true);
+
+  return v->value;
+}

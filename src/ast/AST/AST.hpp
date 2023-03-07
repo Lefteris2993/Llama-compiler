@@ -7,6 +7,8 @@
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LegacyPassManager.h>
 
+#include "../../symbol/symbol.hpp"
+
 class AST {
 public:
   virtual ~AST();
@@ -19,6 +21,8 @@ public:
   unsigned lineno;
 
 protected:
+  static std::unique_ptr<SymbolTable> LLVMValueStore;
+
   static llvm::LLVMContext TheContext;
   static llvm::IRBuilder<> Builder;
   static std::unique_ptr<llvm::Module> TheModule;
