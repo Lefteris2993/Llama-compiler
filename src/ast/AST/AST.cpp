@@ -58,10 +58,7 @@ void AST::llvm_compile_and_dump(bool optimize) {
   Builder.SetInsertPoint(BB);
 
   // Emit the program code.
-  // codegen();
-
-  llvm::Value *n64 = Builder.CreateSExt(c32(42), i64, "ext");
-  Builder.CreateCall(TheWriteInteger, {n64});
+  codegen();
 
   Builder.CreateRet(c32(0));
 
@@ -110,21 +107,21 @@ void AST::codegenLibs() {
 
   /* writeInteger - lib.a */
   llvm::FunctionType *writeInteger_type =
-    llvm::FunctionType::get(llvm::Type::getVoidTy(TheContext), { i64 }, false);
+    llvm::FunctionType::get(llvm::Type::getVoidTy(TheContext), { i32 }, false);
   TheWriteInteger =
     llvm::Function::Create(writeInteger_type, llvm::Function::ExternalLinkage,
                   "writeInteger", TheModule.get());
 
     
   /* print_int */
-  // llvm::FunctionType *printInt_type = 
-  //   llvm::FunctionType::get(TheModule->getTypeByName("unit"), { i32 }, false);
-  // ThePrintIntInternal =
-  //   llvm::Function::Create(printInt_type, llvm::Function::InternalLinkage,
-  //                 "print_int", TheModule.get());
-  // llvm::BasicBlock *ThePrintIntBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", ThePrintIntInternal);
-  // Builder.SetInsertPoint(ThePrintIntBB);
-  // Builder.CreateCall(TheWriteInteger, { ThePrintIntInternal->getArg(0) });
-  // Builder.CreateRet(llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit")));
-  // TheFPM->run(*ThePrintIntInternal);
+  llvm::FunctionType *printInt_type = 
+    llvm::FunctionType::get(TheModule->getTypeByName("unit"), { i32 }, false);
+  ThePrintIntInternal =
+    llvm::Function::Create(printInt_type, llvm::Function::InternalLinkage,
+                  "print_int", TheModule.get());
+  llvm::BasicBlock *ThePrintIntBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", ThePrintIntInternal);
+  Builder.SetInsertPoint(ThePrintIntBB);
+  Builder.CreateCall(TheWriteInteger, { ThePrintIntInternal->getArg(0) });
+  Builder.CreateRet(llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit")));
+  TheFPM->run(*ThePrintIntInternal);
 }
