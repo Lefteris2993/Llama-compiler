@@ -16,6 +16,7 @@ public:
   void insertParams(FunSymbolEntry *f);
   virtual void printOn(std::ostream &out) const override;
   std::vector<Par *> block;
+  std::vector<llvm::Type *> getParams();
 };
 
 

@@ -24,3 +24,11 @@ void ParBlock::sem() {
 void ParBlock::insertParams(FunSymbolEntry *f) {
   for (Par *p : block) p->insertParam(f);
 }
+
+std::vector<llvm::Type*> ParBlock::getParams() {
+  std::vector<llvm::Type *> params;
+  for (Par *p : block){
+    params.push_back(p->typeGen());
+  }
+  return params;
+}

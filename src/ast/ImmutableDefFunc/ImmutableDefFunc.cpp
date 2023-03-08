@@ -57,3 +57,40 @@ void ImmutableDefFunc::decl() {
   symbolTable->endFunctionDef(f, type, lineno);
   symbolTable->closeScope();
 }
+
+llvm::Value* ImmutableDefFunc::codegen() {
+  llvm::BasicBlock *ParentBB = Builder.GetInsertBlock();
+
+  llvm::FunctionType *FT = 
+    llvm::FunctionType::get(getLLVMType(type), block->getParams(), false);
+  llvm::Function *functionInternal =
+    llvm::Function::Create(FT, llvm::Function::InternalLinkage,
+                  id, TheModule.get());
+  llvm::BasicBlock *functionBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", functionInternal);
+  Builder.SetInsertPoint(functionBB);
+  LLVMValueStore->newLLVMValue(id, functionInternal);
+
+  LLVMValueStore->openScope();
+
+  // Set names for all arguments.
+  unsigned Idx = 0;
+  for (auto &Arg : functionInternal->args()) {
+    std::string parId = block->block[Idx++]->getId();
+    Arg.setName(parId);
+    LLVMValueStore->newLLVMValue(parId, &Arg);
+  }
+  
+  llvm::Value *retVal = expr->codegen();
+
+  // TODO: Is this what we want?
+  if (retVal == nullptr)
+    Builder.CreateRet(llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit")));
+  else 
+    Builder.CreateRet(retVal);
+
+  LLVMValueStore->closeScope();
+
+  
+  Builder.SetInsertPoint(ParentBB);
+  return nullptr;
+}

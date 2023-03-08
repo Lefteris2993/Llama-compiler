@@ -15,6 +15,7 @@ public:
   virtual void sem() override;
   void decl();
   virtual void printOn(std::ostream &out) const override;
+  virtual llvm::Value* codegen() override;
 
 private:
   std::string id;

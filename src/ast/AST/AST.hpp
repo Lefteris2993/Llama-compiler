@@ -38,6 +38,8 @@ protected:
   static llvm::ConstantInt* c32(int n);
   static llvm::ConstantInt* c64(int n);
 
+  static llvm::Type* getLLVMType(Type* t);
+
   static llvm::Function *TheWriteString;
   static llvm::Function *TheWriteInteger;
   static llvm::Function *ThePrintIntInternal;

@@ -19,3 +19,11 @@ void Par::sem() {}
 void Par::insertParam(FunSymbolEntry *f) {
   symbolTable->newParameter(id, type, f, lineno);
 }
+
+std::string Par::getId() {
+  return id;
+}
+
+llvm::Type* Par::typeGen() {
+  return getLLVMType(type);
+}

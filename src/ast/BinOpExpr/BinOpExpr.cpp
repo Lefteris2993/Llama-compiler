@@ -70,3 +70,31 @@ void BinOpExpr::sem() {
     break;
   }
 }
+
+llvm::Value* BinOpExpr::codegen() {
+  llvm::Value *l = lhs->codegen();
+  llvm::Value *r = rhs->codegen();
+
+  switch (op) {
+    case BIN_PLUS: 
+      return Builder.CreateAdd(l, r, "addtmp");
+    case BIN_MINUS:
+    case STAR:
+    case DIV:
+    case MOD:
+    case L:
+    case G:
+    case LE:
+    case GE:
+    case STRUCT_EQ:
+    case STRUCT_NE:
+    case EQ:
+    case NE:
+    case AND:
+    case OR:
+    case ASS:
+    case PAR:
+    default:
+      return nullptr;
+  }
+}

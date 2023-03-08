@@ -27,10 +27,11 @@ void FunctionCall::sem() {
 }
 
 llvm::Value* FunctionCall::codegen() {
-  llvm::Function *CalleeF = TheModule->getFunction(id);
+  LLVMSymbolEntry *v  = LLVMValueStore->lookupEntry<LLVMSymbolEntry>(id, true);
+  llvm::Function *CalleeF = (llvm::Function *) v->value;
+  // llvm::Function *CalleeF = TheModule->getFunction(id);
   std::vector<llvm::Value*> ArgsV = block->getArgs();
 
-  Builder.CreateCall(CalleeF, ArgsV, "call_" + id);
-
-  return nullptr;
+  return Builder.CreateCall(CalleeF, ArgsV, "call_" + id);
+;
 }

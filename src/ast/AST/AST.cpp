@@ -1,4 +1,5 @@
 #include "AST.hpp"
+#include "../../types/types.hpp"
 
 #include <llvm/Transforms/InstCombine/InstCombine.h>
 #include <llvm/Transforms/Scalar.h>
@@ -98,12 +99,43 @@ llvm::ConstantInt* AST::c64(int n) {
   return llvm::ConstantInt::get(TheContext, llvm::APInt(64, n, true));
 }
 
+
+llvm::Type* AST::getLLVMType(Type* t) {
+  if (t == nullptr) {
+    return TheModule->getTypeByName("unit");
+  }
+  
+  TypeClassType typeClass = t->getClassType();
+  switch (typeClass) {
+    case TypeClassType::SIMPLE: {
+      SimpleType *simpleType = (SimpleType *) t;
+      switch (simpleType->getType()) {
+        case BaseType::UNIT:
+          return TheModule->getTypeByName("unit");
+        case BaseType::INT:
+          return i32;
+        case BaseType::CHAR:
+          return i8;
+        case BaseType::BOOL:
+          return i1;
+        default:
+          return nullptr;
+      }
+    }
+    case TypeClassType::FUNCTION:
+    case TypeClassType::ARRAY:
+    case TypeClassType::REF: 
+      return nullptr;
+    default:
+      return nullptr;
+  }
+}
+
 void AST::codegenLibs() {
   /* create unit struct (type opaque -> no body) */
   std::string unitName = "unit";
   llvm::StructType *unitType = llvm::StructType::create(TheContext, unitName);
   std::vector<llvm::Type *> emptyBody;
-  // emptyBody.push_back(i1);
   unitType->setBody(emptyBody);
 
   /* writeString - lib.a */
@@ -133,6 +165,5 @@ void AST::codegenLibs() {
   Builder.CreateCall(TheWriteInteger, { ThePrintIntInternal->getArg(0) });
   Builder.CreateRet(llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit")));
   TheFPM->run(*ThePrintIntInternal);
-  // is this needed here?
-  // LLVMValueStore->newLLVMValue("print_int", ThePrintIntInternal);
+  LLVMValueStore->newLLVMValue("print_int", ThePrintIntInternal);
 }

@@ -14,6 +14,8 @@ public:
   void insertParam(FunSymbolEntry *f);
   Type *getType();
   virtual void printOn(std::ostream &out) const override;
+  std::string getId();
+  llvm::Type* typeGen();
 private:
   std::string id;
   Type *type;
