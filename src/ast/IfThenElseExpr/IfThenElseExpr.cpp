@@ -10,7 +10,7 @@ IfThenElseExpr::IfThenElseExpr(
 IfThenElseExpr::~IfThenElseExpr() { delete cond; delete expr1; delete expr2; }
 
 void IfThenElseExpr::printOn(std::ostream &out) const {
-  out << "IfThenElse(" << *cond << "," << *expr1;
+  out << "IfThenElseExpr(" << *cond << "," << *expr1;
   if (expr2 != nullptr) out << "," << *expr2;
   out << ")";
 }
@@ -37,4 +37,37 @@ void IfThenElseExpr::sem() {
   }
 
   this->type = expr1->getType();
+}
+
+llvm::Value* IfThenElseExpr::codegen() {
+  llvm::Value *condValue = cond->codegen();
+  llvm::Value *cond = Builder.CreateICmpNE(condValue, c1(false), "if_cond");
+
+  llvm::Value *thenValue;
+  llvm::Value *elseValue; 
+
+  llvm::Function *TheFunction = Builder.GetInsertBlock()->getParent();
+  llvm::BasicBlock *ThenBB = llvm::BasicBlock::Create(TheContext, "then", TheFunction);
+  llvm::BasicBlock *ElseBB = llvm::BasicBlock::Create(TheContext, "else", TheFunction);
+  llvm::BasicBlock *AfterBB = llvm::BasicBlock::Create(TheContext, "endif", TheFunction);
+
+  Builder.CreateCondBr(cond, ThenBB, ElseBB);
+  
+  Builder.SetInsertPoint(ThenBB);
+  thenValue = expr1->codegen();
+  Builder.CreateBr(AfterBB);
+
+  Builder.SetInsertPoint(ElseBB);
+  if (expr2 != nullptr)
+    elseValue = expr2->codegen();
+  else 
+    elseValue = llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit"));
+  Builder.CreateBr(AfterBB);
+
+  Builder.SetInsertPoint(AfterBB);
+
+  llvm::PHINode *phiNodeRet = Builder.CreatePHI(thenValue->getType(), 2, "if_ret_val");
+  phiNodeRet->addIncoming(thenValue, ThenBB);
+  phiNodeRet->addIncoming(elseValue, ElseBB);
+  return phiNodeRet;
 }

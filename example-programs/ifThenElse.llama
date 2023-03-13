@@ -1,0 +1,7 @@
+let a = 42
+
+let foo (x: int) = x + 42
+
+let bar = if foo(a) > 42 then true else false
+
+let main = if bar then print_int 42 else print_int 17

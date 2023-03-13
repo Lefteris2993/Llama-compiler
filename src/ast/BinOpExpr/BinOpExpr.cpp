@@ -6,7 +6,7 @@ BinOpExpr::BinOpExpr(Expr *l, BinOp p, Expr *r): lhs(l), rhs(r), op(p) {}
 BinOpExpr::~BinOpExpr() { delete lhs; delete rhs; }
 
 void BinOpExpr::printOn(std::ostream &out) const {
-  out << "BinOp(" << op << "," << *lhs << "," << *rhs << ")";
+  out << "BinOpExpr(" << op << "," << *lhs << "," << *rhs << ")";
 }
 
 void BinOpExpr::sem() {
@@ -77,13 +77,15 @@ llvm::Value* BinOpExpr::codegen() {
 
   switch (op) {
     case BIN_PLUS: 
-      return Builder.CreateAdd(l, r, "addtmp");
+      return Builder.CreateAdd(l, r, "add_tmp");
     case BIN_MINUS:
     case STAR:
     case DIV:
     case MOD:
     case L:
+      return nullptr;
     case G:
+      return Builder.CreateICmpSGT(l, r, "gtr_tmp");
     case LE:
     case GE:
     case STRUCT_EQ:

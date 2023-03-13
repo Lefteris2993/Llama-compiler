@@ -7,3 +7,7 @@ void BoolHighPrioExpr::printOn(std::ostream &out) const {
 }
 
 void BoolHighPrioExpr::sem() { type = boolType; }
+
+llvm::Value *BoolHighPrioExpr::codegen() {
+  return c1(val);
+}
