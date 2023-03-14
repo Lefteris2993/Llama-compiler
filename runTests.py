@@ -12,6 +12,9 @@ tests = [
   ['match.llama', False],                   # different return types in clauses
   ['sameNames.llama', False],               # identifier re declaration
   ['variableNotDeclared.llama', False],     #Unknown identifier: b
+  ['printInt.llama', True],
+  ['ifThenElse.llama', True],
+  ['forExpr.llama', True],
 ]
 
 failed = 0

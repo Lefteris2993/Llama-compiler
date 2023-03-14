@@ -13,6 +13,7 @@ files = [
  'variableNotDeclared', 
  'printInt',
  'ifThenElse',
+ 'forExpr',
 ]
 
 for f in files:
