@@ -22,6 +22,7 @@ public:
 
 protected:
   static std::unique_ptr<SymbolTable> LLVMValueStore;
+  static llvm::AllocaInst *CreateEntryBlockAlloca(llvm::Function *TheFunction, const std::string &VarName, llvm::Type *type);
 
   static llvm::LLVMContext TheContext;
   static llvm::IRBuilder<> Builder;

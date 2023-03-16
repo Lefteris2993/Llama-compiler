@@ -81,7 +81,9 @@ llvm::Value* BinOpExpr::codegen() {
     case BIN_MINUS:
     case STAR:
     case DIV:
+      return nullptr;
     case MOD:
+      return Builder.CreateSRem(l, r);
     case L:
       return nullptr;
     case G:
@@ -94,7 +96,9 @@ llvm::Value* BinOpExpr::codegen() {
     case NE:
     case AND:
     case OR:
+      return nullptr;
     case ASS:
+      Builder.CreateStore(r, l);
     case PAR:
     default:
       return nullptr;

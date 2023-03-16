@@ -1,0 +1,12 @@
+let mutable x : int ref
+
+let mutable sum : int ref
+
+let main =
+  x := 42;
+  sum := 0;
+  for i = 17 downto 0 do
+    print_int (!x mod i);
+    sum := (!sum + (!x mod i))
+  done;
+  print_int (!sum)

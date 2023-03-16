@@ -14,6 +14,7 @@ files = [
  'printInt',
  'ifThenElse',
  'forExpr',
+ 'mutable',
 ]
 
 for f in files:

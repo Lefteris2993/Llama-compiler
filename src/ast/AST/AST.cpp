@@ -124,8 +124,9 @@ llvm::Type* AST::getLLVMType(Type* t) {
     }
     case TypeClassType::FUNCTION:
     case TypeClassType::ARRAY:
-    case TypeClassType::REF: 
       return nullptr;
+    case TypeClassType::REF: 
+      return getLLVMType(((RefType *)t)->getType());
     default:
       return nullptr;
   }
@@ -167,3 +168,11 @@ void AST::codegenLibs() {
   TheFPM->run(*ThePrintIntInternal);
   LLVMValueStore->newLLVMValue("print_int", ThePrintIntInternal);
 }
+
+/// CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
+/// the function.  This is used for mutable variables etc.
+llvm::AllocaInst *AST::CreateEntryBlockAlloca(llvm::Function *TheFunction, const std::string &VarName, llvm::Type *type) {
+  llvm::IRBuilder<> TmpB(&TheFunction->getEntryBlock(), TheFunction->getEntryBlock().begin());
+  return TmpB.CreateAlloca(type, nullptr, VarName);
+}
+

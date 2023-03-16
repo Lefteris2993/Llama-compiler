@@ -23,3 +23,11 @@ void MutableDef::sem() {
     Logger::error(lineno, "Mutable \"%s\" must be a REF type", id.c_str());
   symbolTable->newVariable(id, type, lineno);
 }
+
+llvm::Value* MutableDef::codegen() {
+  llvm::Function *TheFunction = Builder.GetInsertBlock()->getParent();
+  llvm::AllocaInst *Alloca = CreateEntryBlockAlloca(TheFunction, id, getLLVMType(type));
+
+  LLVMValueStore->newLLVMValue(id, Alloca);
+  return Alloca;
+}

@@ -15,6 +15,7 @@ tests = [
   ['printInt.llama', True],
   ['ifThenElse.llama', True],
   ['forExpr.llama', True],
+  ['mutable.llama', True],
 ]
 
 failed = 0
