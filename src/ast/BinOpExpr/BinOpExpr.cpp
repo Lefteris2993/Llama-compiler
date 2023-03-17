@@ -79,6 +79,7 @@ llvm::Value* BinOpExpr::codegen() {
     case BIN_PLUS: 
       return Builder.CreateAdd(l, r, "add_tmp");
     case BIN_MINUS:
+      return Builder.CreateSub(l, r, "sub_tmp");
     case STAR:
     case DIV:
       return nullptr;
@@ -90,7 +91,9 @@ llvm::Value* BinOpExpr::codegen() {
       return Builder.CreateICmpSGT(l, r, "gtr_tmp");
     case LE:
     case GE:
+      return nullptr;
     case STRUCT_EQ:
+      return Builder.CreateICmpEQ(l, r, "eq_temp");
     case STRUCT_NE:
     case EQ:
     case NE:

@@ -58,17 +58,24 @@ void ImmutableDefFunc::decl() {
   symbolTable->closeScope();
 }
 
-llvm::Value* ImmutableDefFunc::codegen() {
-  llvm::BasicBlock *ParentBB = Builder.GetInsertBlock();
-
+llvm::Value* ImmutableDefFunc::defCodeGen() {
   llvm::FunctionType *FT = 
     llvm::FunctionType::get(getLLVMType(type), block->getParams(), false);
   llvm::Function *functionInternal =
     llvm::Function::Create(FT, llvm::Function::InternalLinkage,
                   id, TheModule.get());
+  LLVMValueStore->newLLVMValue(id, functionInternal);
+  return nullptr;
+}
+
+
+llvm::Value* ImmutableDefFunc::codegen() {
+  llvm::BasicBlock *ParentBB = Builder.GetInsertBlock();
+  
+  LLVMSymbolEntry *v  = LLVMValueStore->lookupEntry<LLVMSymbolEntry>(id, true);
+  llvm::Function *functionInternal = (llvm::Function *) v->value;
   llvm::BasicBlock *functionBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", functionInternal);
   Builder.SetInsertPoint(functionBB);
-  LLVMValueStore->newLLVMValue(id, functionInternal);
 
   LLVMValueStore->openScope();
 

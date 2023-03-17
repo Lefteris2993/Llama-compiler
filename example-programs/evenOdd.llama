@@ -1,2 +1,8 @@
 let rec even (n : int) : bool = if n = 0 then true else odd (n-1)
   and odd (n : int) : bool = if n = 0 then false else even (n-1)
+
+let main = 
+  if even(17) then 
+    print_int 1
+  else 
+    print_int 0 

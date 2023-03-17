@@ -16,6 +16,7 @@ public:
   void recSem();
   virtual void printOn(std::ostream &out) const override;
   virtual llvm::Value* codegen() override;
+  llvm::Value* recCodegen();
 private:
   std::vector<Def *> block;
 };

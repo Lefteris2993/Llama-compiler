@@ -33,7 +33,18 @@ void DefBlock::recSem() {
       ((ImmutableDefFunc *) d)->decl();
 }
 
+llvm::Value* DefBlock::recCodegen() {
+  for (Def *d : block) 
+    if (d->getDefType() == DefType::DEF_IMMUTABLE_FUN) ((ImmutableDefFunc *) d)->defCodeGen();
+  for (Def *d : block) 
+    d->codegen();
+  return nullptr;
+}
+
 llvm::Value* DefBlock::codegen() {
-  for (Def *d : block) d->codegen();
+  for (Def *d : block) {
+    if (d->getDefType() == DefType::DEF_IMMUTABLE_FUN) ((ImmutableDefFunc *) d)->defCodeGen();
+    d->codegen();
+  }
   return nullptr;
 }
