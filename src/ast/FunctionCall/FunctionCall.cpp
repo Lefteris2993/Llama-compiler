@@ -33,5 +33,4 @@ llvm::Value* FunctionCall::codegen() {
   std::vector<llvm::Value*> ArgsV = block->getArgs();
 
   return Builder.CreateCall(CalleeF, ArgsV, "call_" + id);
-;
 }

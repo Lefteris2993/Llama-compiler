@@ -14,14 +14,19 @@ llvm::IRBuilder<> AST::Builder(TheContext);
 std::unique_ptr<llvm::Module> AST::TheModule;
 std::unique_ptr<llvm::legacy::FunctionPassManager> AST::TheFPM;
 
+std::map<std::string, llvm::Value *> AST::declaredGlobalStrs;
+
+
 llvm::Type* AST::i1;
 llvm::Type* AST::i8;
 llvm::Type* AST::i32;
 llvm::Type* AST::i64;
 
 llvm::Function *AST::TheWriteString;
+llvm::Function *AST::ThePrintStringInternal;
 llvm::Function *AST::TheWriteInteger;
 llvm::Function *AST::ThePrintIntInternal;
+llvm::Function *AST::TheStringCopy;
 
 AST::~AST() {}
 
@@ -139,6 +144,17 @@ void AST::codegenLibs() {
   std::vector<llvm::Type *> emptyBody;
   unitType->setBody(emptyBody);
 
+  /* create string struct type */
+  std::vector<llvm::Type *> members;
+  members.push_back(llvm::PointerType::getUnqual(i8));
+  /* dimensions number of array */
+  members.push_back(i32);
+  /* string is defined as an array of one dim */
+  members.push_back(i32);
+  std::string arrName = "stringType";
+  llvm::StructType *arrayStruct = llvm::StructType::create(TheContext, arrName);
+  arrayStruct->setBody(members);
+
   /* writeString - lib.a */
   llvm::FunctionType *writeString_type =
     llvm::FunctionType::get(llvm::Type::getVoidTy(TheContext),
@@ -147,13 +163,26 @@ void AST::codegenLibs() {
     llvm::Function::Create(writeString_type, llvm::Function::ExternalLinkage,
                       "writeString", TheModule.get());
 
+  /* print_string */
+  llvm::FunctionType *printString_type = 
+    llvm::FunctionType::get(TheModule->getTypeByName("unit"), { TheModule->getTypeByName(arrName)->getPointerTo() }, false);
+  ThePrintStringInternal =
+    llvm::Function::Create(printString_type, llvm::Function::InternalLinkage,
+                  "print_string", TheModule.get());
+  llvm::BasicBlock *ThePrintStringBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", ThePrintStringInternal);
+  Builder.SetInsertPoint(ThePrintStringBB);
+  llvm::Value *printstr_strPtr = Builder.CreateLoad(Builder.CreateGEP(TheModule->getTypeByName(arrName), ThePrintStringInternal->getArg(0), { c32(0), c32(0) }, "stringPtr"));
+  Builder.CreateCall(TheWriteString, { printstr_strPtr });
+  Builder.CreateRet(llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit")));
+  TheFPM->run(*ThePrintStringInternal);
+  LLVMValueStore->newLLVMValue("print_string", ThePrintStringInternal);
+
   /* writeInteger - lib.a */
   llvm::FunctionType *writeInteger_type =
     llvm::FunctionType::get(llvm::Type::getVoidTy(TheContext), { i32 }, false);
   TheWriteInteger =
     llvm::Function::Create(writeInteger_type, llvm::Function::ExternalLinkage,
                   "writeInteger", TheModule.get());
-
     
   /* print_int */
   llvm::FunctionType *printInt_type = 
@@ -167,6 +196,12 @@ void AST::codegenLibs() {
   Builder.CreateRet(llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit")));
   TheFPM->run(*ThePrintIntInternal);
   LLVMValueStore->newLLVMValue("print_int", ThePrintIntInternal);
+
+  llvm::FunctionType *stringCopy_type =
+    llvm::FunctionType::get(llvm::Type::getVoidTy(TheContext), { llvm::PointerType::get(i8, 0), llvm::PointerType::get(i8, 0) }, false);
+  TheStringCopy =
+    llvm::Function::Create(stringCopy_type, llvm::Function::ExternalLinkage,
+                  "strcpy", TheModule.get());
 }
 
 /// CreateEntryBlockAlloca - Create an alloca instruction in the entry block of
@@ -176,3 +211,10 @@ llvm::AllocaInst *AST::CreateEntryBlockAlloca(llvm::Function *TheFunction, const
   return TmpB.CreateAlloca(type, nullptr, VarName);
 }
 
+llvm::Value *AST::getOrCreateGlobalString(std::string stringLiteral) {
+    if (declaredGlobalStrs.find(stringLiteral) != declaredGlobalStrs.end()) return declaredGlobalStrs[stringLiteral];
+    else {
+        declaredGlobalStrs[stringLiteral] = Builder.CreateGlobalStringPtr(llvm::StringRef(stringLiteral));
+        return declaredGlobalStrs[stringLiteral];
+    }
+}

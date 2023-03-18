@@ -5,4 +5,4 @@ let print_plus_one (x : int) = print_int (x + 1)
 
 let print_int (x: int) = print_plus_one (x + 2)
 
-let main = print_int a
+let main = print_int a; print_string "\nhello :)\n"

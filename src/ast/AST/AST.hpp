@@ -23,6 +23,7 @@ public:
 protected:
   static std::unique_ptr<SymbolTable> LLVMValueStore;
   static llvm::AllocaInst *CreateEntryBlockAlloca(llvm::Function *TheFunction, const std::string &VarName, llvm::Type *type);
+  static llvm::Value *getOrCreateGlobalString(std::string stringLiteral);
 
   static llvm::LLVMContext TheContext;
   static llvm::IRBuilder<> Builder;
@@ -42,10 +43,13 @@ protected:
   static llvm::Type* getLLVMType(Type* t);
 
   static llvm::Function *TheWriteString;
+  static llvm::Function *ThePrintStringInternal;
   static llvm::Function *TheWriteInteger;
   static llvm::Function *ThePrintIntInternal;
+  static llvm::Function *TheStringCopy;
 private:
   void codegenLibs();
+  static std::map<std::string, llvm::Value *> declaredGlobalStrs;
 };
 
 inline std::ostream& operator<< (std::ostream &out, const AST &t) {
