@@ -1,6 +1,6 @@
-let mutable x : int ref
+let mutable x : int
 
-let mutable sum : int ref
+let mutable sum : int
 
 let main =
   x := 42;

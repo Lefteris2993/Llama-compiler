@@ -4,7 +4,9 @@
 
 extern SymbolTable *symbolTable;
 
-MutableDef::MutableDef(std::string i, Type *t): id(i), type(t) {}
+MutableDef::MutableDef(std::string i, Type *t): id(i) {
+  type = new RefType(t);
+}
 
 MutableDef::~MutableDef() { delete type; }
 
