@@ -16,7 +16,6 @@ std::unique_ptr<llvm::legacy::FunctionPassManager> AST::TheFPM;
 
 std::map<std::string, llvm::Value *> AST::declaredGlobalStrs;
 
-
 llvm::Type* AST::i1;
 llvm::Type* AST::i8;
 llvm::Type* AST::i32;
@@ -128,8 +127,30 @@ llvm::Type* AST::getLLVMType(Type* t) {
       }
     }
     case TypeClassType::FUNCTION:
-    case TypeClassType::ARRAY:
       return nullptr;
+    case TypeClassType::ARRAY: {
+      ArrayType *arrayType = (ArrayType *) t;
+      std::string typeName = arrayType->typeName();
+
+      if (TheModule->getTypeByName(typeName) != nullptr) {
+        return TheModule->getTypeByName(typeName);
+      }
+
+      /* create array */
+      std::vector<llvm::Type *> members;
+      /* ptr to array */
+      members.push_back(llvm::PointerType::getUnqual(getLLVMType(arrayType->getType())));
+      /* dimensions number of array */
+      members.push_back(i32);
+
+      for (int i = 0; i < arrayType->getStars(); i++) members.push_back(i32); 
+
+      /* create the struct */
+      llvm::StructType *arrayStruct = llvm::StructType::create(TheContext, typeName);
+      arrayStruct->setBody(members);
+
+      return arrayStruct;
+    }
     case TypeClassType::REF: 
       return getLLVMType(((RefType *)t)->getType());
     default:
@@ -145,15 +166,7 @@ void AST::codegenLibs() {
   unitType->setBody(emptyBody);
 
   /* create string struct type */
-  std::vector<llvm::Type *> members;
-  members.push_back(llvm::PointerType::getUnqual(i8));
-  /* dimensions number of array */
-  members.push_back(i32);
-  /* string is defined as an array of one dim */
-  members.push_back(i32);
-  std::string arrName = "stringType";
-  llvm::StructType *arrayStruct = llvm::StructType::create(TheContext, arrName);
-  arrayStruct->setBody(members);
+  llvm::Type *stringType = getLLVMType(new ArrayType(new SimpleType(BaseType::CHAR)));
 
   /* writeString - lib.a */
   llvm::FunctionType *writeString_type =
@@ -165,13 +178,13 @@ void AST::codegenLibs() {
 
   /* print_string */
   llvm::FunctionType *printString_type = 
-    llvm::FunctionType::get(TheModule->getTypeByName("unit"), { TheModule->getTypeByName(arrName)->getPointerTo() }, false);
+    llvm::FunctionType::get(TheModule->getTypeByName("unit"), { stringType->getPointerTo() }, false);
   ThePrintStringInternal =
     llvm::Function::Create(printString_type, llvm::Function::InternalLinkage,
                   "print_string", TheModule.get());
   llvm::BasicBlock *ThePrintStringBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", ThePrintStringInternal);
   Builder.SetInsertPoint(ThePrintStringBB);
-  llvm::Value *printstr_strPtr = Builder.CreateLoad(Builder.CreateGEP(TheModule->getTypeByName(arrName), ThePrintStringInternal->getArg(0), { c32(0), c32(0) }, "stringPtr"));
+  llvm::Value *printstr_strPtr = Builder.CreateLoad(Builder.CreateGEP(stringType, ThePrintStringInternal->getArg(0), { c32(0), c32(0) }, "stringPtr"));
   Builder.CreateCall(TheWriteString, { printstr_strPtr });
   Builder.CreateRet(llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit")));
   TheFPM->run(*ThePrintStringInternal);

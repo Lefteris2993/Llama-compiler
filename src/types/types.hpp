@@ -17,6 +17,7 @@ class Type {
 public:
   virtual ~Type();
   virtual void printOn(std::ostream &out) const = 0;
+  virtual std::string typeName() const = 0;
 
   static bool equal_types(const Type *t1, const Type *t2);
 
@@ -36,6 +37,7 @@ public:
   SimpleType(BaseType t);
   BaseType getType();
   virtual void printOn(std::ostream &out) const override;
+  virtual std::string typeName() const override;
 private:
   BaseType type;
 };
@@ -45,6 +47,7 @@ public:
   FunctionType(Type *l, Type *r);
   ~FunctionType();
   virtual void printOn(std::ostream &out) const override;
+  virtual std::string typeName() const override;
   Type *getLeft();
   Type *getRight();
 private:
@@ -57,6 +60,7 @@ public:
   ArrayType(Type *t, unsigned s = 1);
   ~ArrayType();
   virtual void printOn(std::ostream &out) const override;
+  virtual std::string typeName() const override;
   Type *getType();
   unsigned getStars();
 private:
@@ -69,6 +73,7 @@ public:
   RefType(Type *t);
   ~RefType();
   virtual void printOn(std::ostream &out) const override;
+  virtual std::string typeName() const override;
   Type *getType();
 private:
   Type *type;

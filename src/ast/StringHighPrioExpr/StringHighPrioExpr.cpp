@@ -22,13 +22,13 @@ void StringHighPrioExpr::printOn(std::ostream &out) const {
 void StringHighPrioExpr::sem() { type = stringType; }
 
 llvm::Value* StringHighPrioExpr::codegen() {
-  llvm::StructType *arrayStruct = TheModule->getTypeByName("stringType");
+  llvm::Type *stringType = getLLVMType(new ArrayType(new SimpleType(BaseType::CHAR)));
 
   auto stringVarMalloc = llvm::CallInst::CreateMalloc(
       Builder.GetInsertBlock(),
       llvm::Type::getIntNTy(TheContext, TheModule->getDataLayout().getMaxPointerSizeInBits()),
-      arrayStruct,
-      llvm::ConstantExpr::getSizeOf(arrayStruct),
+      stringType,
+      llvm::ConstantExpr::getSizeOf(stringType),
       nullptr,
       nullptr,
       "array_struct_malloc"
@@ -49,11 +49,11 @@ llvm::Value* StringHighPrioExpr::codegen() {
   Builder.Insert(arr);
 
   /* append 'metadata' of the array variable { ptr_to_arr, dimsNum, dim1, dim2, ..., dimn } */
-  llvm::Value *arrayPtr = Builder.CreateGEP(arrayStruct, stringV, { c32(0), c32(0) }, "string_literal");
+  llvm::Value *arrayPtr = Builder.CreateGEP(stringType, stringV, { c32(0), c32(0) }, "string_literal");
   Builder.CreateStore(arr, arrayPtr);
-  llvm::Value *arrayDims = Builder.CreateGEP(arrayStruct, stringV, { c32(0), c32(1) }, "string_dim");
+  llvm::Value *arrayDims = Builder.CreateGEP(stringType, stringV, { c32(0), c32(1) }, "string_dim");
   Builder.CreateStore(c32(1), arrayDims);
-  llvm::Value *dim = Builder.CreateGEP(arrayStruct, stringV, { c32(0), c32(2) }, "dim_0");
+  llvm::Value *dim = Builder.CreateGEP(stringType, stringV, { c32(0), c32(2) }, "dim_0");
   Builder.CreateStore(c32(val.length() + 1), dim);
 
   /* add the string to the array */

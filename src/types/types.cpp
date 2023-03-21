@@ -77,12 +77,30 @@ void SimpleType::printOn(std::ostream &out) const {
   }
   out << ")";
 }
+std::string SimpleType::typeName() const {
+  switch (type)
+  {
+  case BaseType::UNIT :
+    return "UNIT";
+  case BaseType::INT :
+    return "INT";
+  case BaseType::CHAR :
+    return "CHAR";
+  case BaseType::BOOL :
+    return "BOOL";
+  }
+};
 BaseType SimpleType::getType() { return this->type; }
 
 FunctionType::FunctionType(Type *l, Type *r): left(l), right(r) { this->classType = FUNCTION; }
 FunctionType::~FunctionType() { delete left; delete right; }
 void FunctionType::printOn(std::ostream &out) const {
   out << "FunctionType(" << *left << "," << *right << ")";
+}
+std::string FunctionType::typeName() const {
+  std::string l = left->typeName();
+  std::string r = right->typeName();
+  return "(" + l + "->" + r + ")";
 }
 Type* FunctionType::getLeft() { return this->left; }
 Type* FunctionType::getRight() { return this->right; }
@@ -96,6 +114,10 @@ ArrayType::~ArrayType() { delete type; }
 void ArrayType::printOn(std::ostream &out) const {
   out << "ArrayType(" << stars << "," << *type << ")";
 }
+std::string ArrayType::typeName() const {
+  std::string t = type->typeName();
+  return "array_of_" + t + "_dim_" + std::to_string(stars);
+}
 Type* ArrayType::getType() { return this->type; }
 unsigned ArrayType::getStars() { return stars; }
 
@@ -104,6 +126,10 @@ RefType::RefType(Type *t): type(t) { this->classType = REF; }
 RefType::~RefType() { delete type; }
 void RefType::printOn(std::ostream &out) const {
   out << "RefType(" << *type << ")";
+}
+std::string RefType::typeName() const {
+  std::string t = type->typeName();
+  return "ref_" + t;
 }
 Type* RefType::getType() { return this->type; }
 

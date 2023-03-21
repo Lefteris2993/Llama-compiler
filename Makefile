@@ -44,6 +44,9 @@ Llama: ast.o error.o symbol.o types.o parser.o lexer.o library.o
 test: Llama
 	$(PYTHON) runTests.py
 
+updateASTs: Llama
+	$(PYTHON) updateAst.py
+
 clean:
 	$(RM) lexer.cpp parser.cpp parser.hpp parser.output
 	find . -type f -name '*.o' -delete
