@@ -7,6 +7,8 @@ let main =
   sum := 0;
   for i = 17 downto 0 do
     print_int (!x mod i);
-    sum := (!sum + (!x mod i))
+    sum := (!sum + (!x mod i));
+    print_string "\n"
   done;
-  print_int (!sum)
+  print_int (!sum);
+  print_string "\n"

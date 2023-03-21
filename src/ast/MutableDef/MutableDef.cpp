@@ -28,7 +28,7 @@ void MutableDef::sem() {
 
 llvm::Value* MutableDef::codegen() {
   llvm::Function *TheFunction = Builder.GetInsertBlock()->getParent();
-  llvm::AllocaInst *Alloca = CreateEntryBlockAlloca(TheFunction, id, getLLVMType(type));
+  llvm::AllocaInst *Alloca = CreateEntryBlockAlloca(TheFunction, id, getLLVMType(type)->getPointerElementType());
 
   LLVMValueStore->newLLVMValue(id, Alloca);
   return Alloca;

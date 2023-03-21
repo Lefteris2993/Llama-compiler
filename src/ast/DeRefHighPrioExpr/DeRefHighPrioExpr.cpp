@@ -21,5 +21,6 @@ void DeRefHighPrioExpr::sem() {
 
 llvm::Value* DeRefHighPrioExpr::codegen() {
   llvm::Value* v = expr->codegen();
-  return Builder.CreateLoad(((llvm::AllocaInst*) v)->getAllocatedType(), v);
+  if (v->getType()->isPointerTy()) return Builder.CreateLoad(v);
+  return nullptr;
 }

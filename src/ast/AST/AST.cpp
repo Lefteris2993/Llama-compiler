@@ -139,7 +139,10 @@ llvm::Type* AST::getLLVMType(Type* t) {
       /* create array */
       std::vector<llvm::Type *> members;
       /* ptr to array */
-      members.push_back(llvm::PointerType::getUnqual(getLLVMType(arrayType->getType())));
+      members.push_back(llvm::PointerType::getUnqual(
+        // getPointerElementType is used here since array elem will always of type ref
+        getLLVMType(arrayType->getType())->getPointerElementType()
+      ));
       /* dimensions number of array */
       members.push_back(i32);
 
@@ -152,7 +155,7 @@ llvm::Type* AST::getLLVMType(Type* t) {
       return arrayStruct;
     }
     case TypeClassType::REF: 
-      return getLLVMType(((RefType *)t)->getType());
+      return getLLVMType(((RefType *)t)->getType())->getPointerTo();
     default:
       return nullptr;
   }

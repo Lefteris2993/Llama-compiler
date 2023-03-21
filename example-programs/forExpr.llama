@@ -3,5 +3,6 @@ let a = 42
 let main = 
   for i = a downto 0 do 
     if i > 17 then print_int i
-    else print_int 0
+    else print_int 0 ;
+    print_string "\n"
   done
