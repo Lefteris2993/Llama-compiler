@@ -14,3 +14,9 @@ void LetInExpr::sem() {
 
   type = expr->getType();
 }
+
+llvm::Value* LetInExpr::codegen() {
+  let->codegen();
+  expr->codegen();
+  return nullptr;
+}

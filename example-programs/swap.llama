@@ -1,0 +1,12 @@
+let swap (x : int ref) (y : int ref) =
+  let t = !x in x := !y ; y := t
+
+let mutable x : int
+let mutable y : int
+
+let main =
+  x := 42;
+  y := 17;
+  print_int !x;
+  swap x y;
+  print_int !x

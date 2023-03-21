@@ -15,6 +15,8 @@ files = [
  'ifThenElse',
  'forExpr',
  'mutable',
+ 'swap',
+ 'assignment',
 ]
 
 for f in files:

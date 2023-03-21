@@ -1,0 +1,7 @@
+let assign (x : int ref) (y : int) = 
+  x := y
+
+let mutable x : int
+let main = 
+  assign x 42;
+  print_int !x

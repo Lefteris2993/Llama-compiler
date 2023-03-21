@@ -23,3 +23,26 @@ void WhileExpr::sem() {
 
   type = unitType;
 }
+
+llvm::Value* WhileExpr::codegen() {
+  llvm::BasicBlock *PrevBB = Builder.GetInsertBlock();
+  llvm::Function *TheFunction = PrevBB->getParent();
+  llvm::BasicBlock *whileBB =
+    llvm::BasicBlock::Create(TheContext, "while", TheFunction);
+  llvm::BasicBlock *BodyBB =
+    llvm::BasicBlock::Create(TheContext, "body", TheFunction);
+  llvm::BasicBlock *AfterBB =
+    llvm::BasicBlock::Create(TheContext, "end_while", TheFunction);
+
+  Builder.CreateBr(whileBB);
+  Builder.SetInsertPoint(whileBB);
+  llvm::Value *condition = cond->codegen();
+  Builder.CreateCondBr(condition, BodyBB, AfterBB);
+
+  Builder.SetInsertPoint(BodyBB);
+  body->codegen();
+  Builder.CreateBr(whileBB);
+
+  Builder.SetInsertPoint(AfterBB);
+  return llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit"));
+}
