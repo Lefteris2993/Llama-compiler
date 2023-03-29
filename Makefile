@@ -47,6 +47,9 @@ test: Llama
 updateASTs: Llama
 	$(PYTHON) updateAst.py
 
+compile: Llama
+	./do.sh $(PRO)
+
 clean:
 	$(RM) lexer.cpp parser.cpp parser.hpp parser.output
 	find . -type f -name '*.o' -delete

@@ -41,7 +41,7 @@ llvm::Value* MutableArrayDef::codegen() {
 
   std::vector<llvm::Value *> values = block->codegenValues();
 
-  llvm::Type* llvmType = getLLVMType(((ArrayType *) type)->getType());
+  llvm::Type* llvmType = getLLVMType(((RefType *)((ArrayType *) type)->getType())->getType());
 
   llvm::Value *mulTemp = c32(1);
   for (llvm::Value *val : values) {
@@ -61,6 +61,8 @@ llvm::Value* MutableArrayDef::codegen() {
   Builder.Insert(arr);
 
   /* append 'metadata' of the array variable { ptr_to_arr, dimsNum, dim1, dim2, ..., dimn } */
+  llvm::Value *arrayPtr = Builder.CreateGEP(arrayType, arrayV, { c32(0), c32(0) }, "arr_ptr");
+  Builder.CreateStore(arr, arrayPtr);
   llvm::Value *dim = Builder.CreateGEP(arrayType, arrayV, { c32(0), c32(1) }, "arr_dim");
   Builder.CreateStore(c32(values.size()), dim);
   int count = 2;
