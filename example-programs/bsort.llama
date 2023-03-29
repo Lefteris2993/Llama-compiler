@@ -24,7 +24,7 @@ let main =
     print_string "new_line" in
 
   let mutable seed : int
-  and mutable x[16] : array of int in
+  and mutable x[16] : int in
 
   seed := 65;
   for i = 0 to 15 do

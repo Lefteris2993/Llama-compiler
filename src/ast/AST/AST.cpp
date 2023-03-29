@@ -26,6 +26,8 @@ llvm::Function *AST::ThePrintStringInternal;
 llvm::Function *AST::TheWriteInteger;
 llvm::Function *AST::ThePrintIntInternal;
 llvm::Function *AST::TheStringCopy;
+llvm::Function *AST::TheWriteChar;
+llvm::Function *AST::ThePrintCharInternal;
 
 AST::~AST() {}
 
@@ -133,7 +135,7 @@ llvm::Type* AST::getLLVMType(Type* t) {
       std::string typeName = arrayType->typeName();
 
       if (TheModule->getTypeByName(typeName) != nullptr) {
-        return TheModule->getTypeByName(typeName);
+        return TheModule->getTypeByName(typeName)->getPointerTo();
       }
 
       /* create array */
@@ -152,7 +154,7 @@ llvm::Type* AST::getLLVMType(Type* t) {
       llvm::StructType *arrayStruct = llvm::StructType::create(TheContext, typeName);
       arrayStruct->setBody(members);
 
-      return arrayStruct;
+      return arrayStruct->getPointerTo();
     }
     case TypeClassType::REF: 
       return getLLVMType(((RefType *)t)->getType())->getPointerTo();
@@ -169,7 +171,7 @@ void AST::codegenLibs() {
   unitType->setBody(emptyBody);
 
   /* create string struct type */
-  llvm::Type *stringType = getLLVMType(new ArrayType(new SimpleType(BaseType::CHAR)));
+  llvm::Type *stringType = getLLVMType(new ArrayType(new SimpleType(BaseType::CHAR)))->getPointerElementType();
 
   /* writeString - lib.a */
   llvm::FunctionType *writeString_type =
@@ -213,11 +215,31 @@ void AST::codegenLibs() {
   TheFPM->run(*ThePrintIntInternal);
   LLVMValueStore->newLLVMValue("print_int", ThePrintIntInternal);
 
+  /* strcpy - lib.a */
   llvm::FunctionType *stringCopy_type =
     llvm::FunctionType::get(llvm::Type::getVoidTy(TheContext), { llvm::PointerType::get(i8, 0), llvm::PointerType::get(i8, 0) }, false);
   TheStringCopy =
     llvm::Function::Create(stringCopy_type, llvm::Function::ExternalLinkage,
                   "strcpy", TheModule.get());
+
+  /* writeChar - lib.a */
+  llvm::FunctionType *writeChar_type =
+    llvm::FunctionType::get(llvm::Type::getVoidTy(TheContext), { i8 }, false);
+  TheWriteChar =
+    llvm::Function::Create(writeChar_type, llvm::Function::ExternalLinkage,
+                  "writeChar", TheModule.get());
+  /* print_char */
+  llvm::FunctionType *printChar_type = 
+    llvm::FunctionType::get(TheModule->getTypeByName("unit"), { i8 }, false);
+  ThePrintCharInternal =
+    llvm::Function::Create(printChar_type, llvm::Function::InternalLinkage,
+                  "print_char", TheModule.get());
+  llvm::BasicBlock *ThePrintCharBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", ThePrintCharInternal);
+  Builder.SetInsertPoint(ThePrintCharBB);
+  Builder.CreateCall(TheWriteChar, { ThePrintCharInternal->getArg(0) });
+  Builder.CreateRet(llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit")));
+  TheFPM->run(*ThePrintCharInternal);
+  LLVMValueStore->newLLVMValue("print_char", ThePrintCharInternal);
 }
 
 /// CreateEntryBlockAlloca - Create an alloca instruction in the entry block of

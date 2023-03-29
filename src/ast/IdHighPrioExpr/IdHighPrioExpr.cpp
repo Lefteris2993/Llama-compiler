@@ -28,7 +28,40 @@ void IdHighPrioExpr::sem() {
 }
 
 llvm::Value* IdHighPrioExpr::codegen() {
-  LLVMSymbolEntry *v  = LLVMValueStore->lookupEntry<LLVMSymbolEntry>(id, true);
+  LLVMSymbolEntry *s  = LLVMValueStore->lookupEntry<LLVMSymbolEntry>(id, true);
+  
+  if (commaExprList == nullptr) return s->value;
 
-  return v->value;
+  llvm::Value *accessEl = nullptr;
+  std::vector<llvm::Value *> dimValues = commaExprList->codegenValues();
+  llvm::Value *accessSeValue = s->value;
+  llvm::Value *mulTemp = c32(1);
+
+  for (long unsigned int i = dimValues.size(); i > 0; i--) {
+    if (i != dimValues.size()) {
+      mulTemp = Builder.CreateMul(
+        mulTemp,
+        Builder.CreateLoad(
+          Builder.CreateGEP(
+            // (s->getType()->isPointerTy()) ? s->getType()->getPointerElementType() : s->getType(),
+            accessSeValue->getType()->getPointerElementType(),
+            accessSeValue,
+            {c32(0), c32(i + 2)}
+          )
+        )
+      );
+      accessEl = Builder.CreateAdd(accessEl, Builder.CreateMul(mulTemp, dimValues.at(i - 1)));
+    }
+    else {
+      accessEl = dimValues.at(i - 1);
+    }
+  }
+  llvm::Value *arrPtr = Builder.CreateGEP(
+    // (s->getType()->isPointerTy()) ? s->getType()->getPointerElementType() : s->getType(),
+    accessSeValue->getType()->getPointerElementType(),
+    accessSeValue,
+    {c32(0), c32(0)}
+  );
+  arrPtr = Builder.CreateLoad(arrPtr, s->id);
+  return Builder.CreateGEP(arrPtr, accessEl);
 }

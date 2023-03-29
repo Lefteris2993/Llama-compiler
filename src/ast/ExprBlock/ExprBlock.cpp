@@ -26,3 +26,11 @@ void ExprBlock::sem() {
     }
   }
 }
+
+std::vector<llvm::Value *> ExprBlock::codegenValues() {
+  std::vector<llvm::Value *> values;
+  for (Expr *e : block){
+    values.push_back(e->codegen());
+  }
+  return values;
+}

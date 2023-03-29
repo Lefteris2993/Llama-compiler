@@ -17,6 +17,8 @@ files = [
  'mutable',
  'swap',
  'assignment',
+ 'dim',
+ 'test',
 ]
 
 for f in files:

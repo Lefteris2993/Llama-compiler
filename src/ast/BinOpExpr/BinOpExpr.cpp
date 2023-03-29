@@ -101,7 +101,7 @@ llvm::Value* BinOpExpr::codegen() {
     case OR:
       return nullptr;
     case ASS:
-      Builder.CreateStore(r, l);
+      return Builder.CreateStore(r, l);
     case PAR:
     default:
       return nullptr;

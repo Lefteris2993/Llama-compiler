@@ -22,4 +22,12 @@ void Library::insertFunctionsToScope(SymbolTable *sTable) {
   f->returnType = unitType;
   f->paramTypes = new Type *[1];
   f->paramTypes[0] = stringType;
+
+  /* print_char */
+  funcType = new FunctionType(charType, unitType);
+  f = sTable->newFunction("print_char", funcType, -1);
+  f->paramNum = 1;
+  f->returnType = unitType;
+  f->paramTypes = new Type *[1];
+  f->paramTypes[0] = charType;
 }

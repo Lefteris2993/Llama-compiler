@@ -47,6 +47,9 @@ protected:
   static llvm::Function *TheWriteInteger;
   static llvm::Function *ThePrintIntInternal;
   static llvm::Function *TheStringCopy;
+  static llvm::Function *TheWriteChar;
+  static llvm::Function *ThePrintCharInternal;
+
 private:
   void codegenLibs();
   static std::map<std::string, llvm::Value *> declaredGlobalStrs;

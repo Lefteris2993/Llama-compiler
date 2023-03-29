@@ -27,3 +27,9 @@ void DimExpr::sem() {
 
   type = intType;
 }
+
+llvm::Value* DimExpr::codegen() {
+  LLVMSymbolEntry *v  = LLVMValueStore->lookupEntry<LLVMSymbolEntry>(id, true);
+  
+  return Builder.CreateLoad(Builder.CreateGEP(v->value, { c32(0), c32(dimension + 1) }), "dim");
+}

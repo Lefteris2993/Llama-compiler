@@ -7,3 +7,7 @@ void CharHighPrioExpr::printOn(std::ostream &out) const {
 }
 
 void CharHighPrioExpr::sem() { type = charType; }
+
+llvm::Value* CharHighPrioExpr::codegen() {
+  return c8(val);
+}

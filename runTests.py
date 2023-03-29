@@ -16,6 +16,9 @@ tests = [
   ['ifThenElse.llama', True],
   ['forExpr.llama', True],
   ['mutable.llama', True],
+  ['swap.llama', True],
+  ['assignment.llama', True],
+  ['dim.llama', True],
 ]
 
 failed = 0

@@ -22,28 +22,28 @@ void StringHighPrioExpr::printOn(std::ostream &out) const {
 void StringHighPrioExpr::sem() { type = stringType; }
 
 llvm::Value* StringHighPrioExpr::codegen() {
-  llvm::Type *stringType = getLLVMType(new ArrayType(new SimpleType(BaseType::CHAR)));
+  llvm::Type *stringType = getLLVMType(new ArrayType(new SimpleType(BaseType::CHAR)))->getPointerElementType();
 
   auto stringVarMalloc = llvm::CallInst::CreateMalloc(
-      Builder.GetInsertBlock(),
-      llvm::Type::getIntNTy(TheContext, TheModule->getDataLayout().getMaxPointerSizeInBits()),
-      stringType,
-      llvm::ConstantExpr::getSizeOf(stringType),
-      nullptr,
-      nullptr,
-      "array_struct_malloc"
+    Builder.GetInsertBlock(),
+    llvm::Type::getIntNTy(TheContext, TheModule->getDataLayout().getMaxPointerSizeInBits()),
+    stringType,
+    llvm::ConstantExpr::getSizeOf(stringType),
+    nullptr,
+    nullptr,
+    "array_struct_malloc"
   );
   llvm::Value *stringV = Builder.Insert(stringVarMalloc);
 
 
   auto arr = llvm::CallInst::CreateMalloc(
-      Builder.GetInsertBlock(),
-      llvm::Type::getIntNTy(TheContext, TheModule->getDataLayout().getMaxPointerSizeInBits()),
-      i8,
-      llvm::ConstantExpr::getSizeOf(i8),
-      c32(val.length() + 1),
-      nullptr,
-      "array_malloc"
+    Builder.GetInsertBlock(),
+    llvm::Type::getIntNTy(TheContext, TheModule->getDataLayout().getMaxPointerSizeInBits()),
+    i8,
+    llvm::ConstantExpr::getSizeOf(i8),
+    c32(val.length()),
+    nullptr,
+    "array_malloc"
   );
 
   Builder.Insert(arr);
@@ -54,7 +54,7 @@ llvm::Value* StringHighPrioExpr::codegen() {
   llvm::Value *arrayDims = Builder.CreateGEP(stringType, stringV, { c32(0), c32(1) }, "string_dim");
   Builder.CreateStore(c32(1), arrayDims);
   llvm::Value *dim = Builder.CreateGEP(stringType, stringV, { c32(0), c32(2) }, "dim_0");
-  Builder.CreateStore(c32(val.length() + 1), dim);
+  Builder.CreateStore(c32(val.length()), dim);
 
   /* add the string to the array */
   std::vector<llvm::Value *> args;

@@ -1,0 +1,3 @@
+let str = "some_string"
+let print_dim (s: array of char) =  print_int (dim s)
+let main = print_dim str

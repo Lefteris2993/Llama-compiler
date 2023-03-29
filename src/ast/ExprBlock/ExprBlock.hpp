@@ -13,7 +13,8 @@ public:
   ~ExprBlock();
   void append(Expr *c);
   virtual void sem() override;
-  virtual void printOn(std::ostream &out) const override ;
+  virtual void printOn(std::ostream &out) const override;
+  std::vector<llvm::Value *> codegenValues();
 
 private:
   std::vector<Expr *> block;
