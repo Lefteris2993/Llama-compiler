@@ -56,9 +56,9 @@ llvm::Value* ForExpr::codegen() {
   
   llvm::Value *loopCond;
   if (up)
-    loopCond = Builder.CreateICmpULT(phiIter, toVar, "loop_cond");
+    loopCond = Builder.CreateICmpULE(phiIter, toVar, "loop_cond");
   else
-    loopCond = Builder.CreateICmpSGT(phiIter, toVar, "loop_cond");
+    loopCond = Builder.CreateICmpSGE(phiIter, toVar, "loop_cond");
     
   Builder.CreateCondBr(loopCond, BodyBB, AfterBB);
   Builder.SetInsertPoint(BodyBB);

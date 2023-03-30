@@ -81,28 +81,35 @@ llvm::Value* BinOpExpr::codegen() {
     case BIN_MINUS:
       return Builder.CreateSub(l, r, "sub_tmp");
     case STAR:
+      return Builder.CreateMul(l, r);
     case DIV:
-      return nullptr;
+      return Builder.CreateSDiv(l, r);
     case MOD:
       return Builder.CreateSRem(l, r);
     case L:
-      return nullptr;
+      return Builder.CreateICmpULT(l, r);
     case G:
       return Builder.CreateICmpSGT(l, r, "gtr_tmp");
     case LE:
+      return Builder.CreateICmpULE(l, r);
     case GE:
-      return nullptr;
+      return Builder.CreateICmpSGE(l, r);
     case STRUCT_EQ:
       return Builder.CreateICmpEQ(l, r, "eq_temp");
     case STRUCT_NE:
+      return Builder.CreateICmpNE(l, r);
     case EQ:
     case NE:
-    case AND:
-    case OR:
+      // not implemented
       return nullptr;
+    case AND:
+      return Builder.CreateAnd(l, r);
+    case OR:
+      return Builder.CreateOr(l, r);
     case ASS:
       return Builder.CreateStore(r, l);
     case PAR:
+      return llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit"));
     default:
       return nullptr;
   }

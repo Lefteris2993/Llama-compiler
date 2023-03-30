@@ -19,6 +19,7 @@ tests = [
   ['swap.llama', True],
   ['assignment.llama', True],
   ['dim.llama', True],
+  ['array.llama', True],
 ]
 
 failed = 0

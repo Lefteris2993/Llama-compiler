@@ -18,6 +18,7 @@ files = [
  'swap',
  'assignment',
  'dim',
+ 'array',
  'test',
 ]
 
