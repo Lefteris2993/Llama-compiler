@@ -7,3 +7,7 @@ void UnitHighPrioExpr::printOn(std::ostream &out) const {
 }
 
 void UnitHighPrioExpr::sem() { type = unitType; }
+
+llvm::Value* UnitHighPrioExpr::codegen() {
+  return llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit"));
+}

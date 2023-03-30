@@ -7,7 +7,7 @@
 class Expr: public AST {
 public:
   Type *getType();
-
+  // virtual class llvm::Value *codegen is overridden 
 protected:
   Type *type;
 };

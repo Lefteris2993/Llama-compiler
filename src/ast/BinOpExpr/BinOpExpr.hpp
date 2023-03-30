@@ -10,7 +10,6 @@ public:
   virtual void sem() override;
   virtual void printOn(std::ostream &out) const override;
   virtual llvm::Value* codegen() override;
-
 private:
   Expr *lhs;
   Expr *rhs;

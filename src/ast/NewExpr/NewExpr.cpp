@@ -9,3 +9,17 @@ void NewExpr::printOn(std::ostream &out) const {
 }
 
 void NewExpr::sem() { /* Do Nothing */ }
+
+llvm::Value* NewExpr::codegen() {
+  auto v = llvm::CallInst::CreateMalloc(
+    Builder.GetInsertBlock(),
+    llvm::Type::getIntNTy(TheContext, TheModule->getDataLayout().getMaxPointerSizeInBits()),
+    getLLVMType(type)->getPointerElementType(),
+    llvm::ConstantExpr::getSizeOf(getLLVMType(type)->getPointerElementType()),
+    nullptr,
+    nullptr,
+    ""
+  );
+
+  return Builder.Insert(v);
+}

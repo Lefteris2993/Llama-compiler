@@ -106,8 +106,10 @@ llvm::Value* BinOpExpr::codegen() {
       return Builder.CreateAnd(l, r);
     case OR:
       return Builder.CreateOr(l, r);
-    case ASS:
-      return Builder.CreateStore(r, l);
+    case ASS: {
+      Builder.CreateStore(r, l);
+      return llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit"));
+    }
     case PAR:
       return llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit"));
     default:

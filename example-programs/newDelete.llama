@@ -1,0 +1,10 @@
+let x : int ref = new int
+
+let f (i : int ref) = i := 42
+
+let main =
+  x := 17;
+  print_int !x;
+  f x;
+  print_int !x;
+  delete x

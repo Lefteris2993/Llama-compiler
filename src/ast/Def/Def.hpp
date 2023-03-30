@@ -9,6 +9,7 @@ public:
   Def();
   ~Def();
   virtual DefType getDefType() const = 0;
+  // virtual class llvm::Value *codegen is overridden 
 };
 
 

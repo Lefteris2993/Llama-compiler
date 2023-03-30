@@ -20,6 +20,7 @@ tests = [
   ['assignment.llama', True],
   ['dim.llama', True],
   ['array.llama', True],
+  ['newDelete.llama', True],
 ]
 
 failed = 0

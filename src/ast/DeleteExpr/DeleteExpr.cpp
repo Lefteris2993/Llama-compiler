@@ -17,3 +17,8 @@ void DeleteExpr::sem() {
     Logger::error(lineno, "Can not delete non REF type");
   type = unitType;
 }
+
+llvm::Value* DeleteExpr::codegen() {
+  Builder.Insert(llvm::CallInst::CreateFree(expr->codegen(), Builder.GetInsertBlock()));
+  return llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit"));
+}

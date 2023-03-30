@@ -19,6 +19,7 @@ files = [
  'assignment',
  'dim',
  'array',
+ 'newDelete',
  'test',
 ]
 
