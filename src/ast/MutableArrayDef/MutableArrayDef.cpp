@@ -8,7 +8,7 @@ MutableArrayDef::MutableArrayDef(
   ExprBlock *b, 
   Type *t
 ): id(i), block(b) {
-  type = new ArrayType(t);
+  type = new ArrayType(t, b->getBlockSize());
 }
 
 MutableArrayDef::~MutableArrayDef() { delete block; delete type; }

@@ -18,6 +18,10 @@ void ExprBlock::printOn(std::ostream &out) const {
   out << ")";
 }
 
+unsigned int ExprBlock::getBlockSize() {
+  return block.size();
+}
+
 void ExprBlock::sem() {
   for (Expr *c : block) {
     c->sem();

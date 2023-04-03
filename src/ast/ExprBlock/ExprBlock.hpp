@@ -14,6 +14,7 @@ public:
   void append(Expr *c);
   virtual void sem() override;
   virtual void printOn(std::ostream &out) const override;
+  unsigned int getBlockSize();
   std::vector<llvm::Value *> codegenValues();
 
 private:

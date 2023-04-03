@@ -21,6 +21,9 @@ void IdHighPrioExpr::sem() {
     if (s->type->getClassType() != TypeClassType::ARRAY )
       Logger::error(lineno, "\"%s\" is not an array", s->id.c_str());
 
+    if (commaExprList->getBlockSize() != ((ArrayType *) s->type)->getStars()) 
+      Logger::error(lineno, "\"%s\": incorrect number of array dimension parameters", s->id.c_str());
+
     type = ((ArrayType *) s->type)->getType();
   } else {
     type = s->type;
