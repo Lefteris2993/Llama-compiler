@@ -21,6 +21,7 @@ tests = [
   ['dim.llama', True],
   ['array.llama', True],
   ['newDelete.llama', True],
+  ['2DArray.llama', True],
 ]
 
 failed = 0

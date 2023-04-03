@@ -20,6 +20,7 @@ files = [
  'dim',
  'array',
  'newDelete',
+ '2DArray',
  'test',
 ]
 
