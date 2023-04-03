@@ -1,0 +1,22 @@
+let print_array (x : array [*, *] of int) (y : int) = 
+  for i = 0 to dim x - 1 do
+    if i > 0 then print_string ", ";
+    print_int !x[y, i]
+  done;
+  print_string "\n"
+
+let mutable arr [10, 10] : int
+
+let main = 
+  let mutable seed : int in
+
+  seed := 65;
+  for i = 0 to 9 do
+    for j = 0 to 9 do
+      seed := (!seed * 137 + 220 + i) mod 101;
+      arr[i,j] := !seed
+    done
+  done;
+  for i = 0 to 9 do
+    print_array arr i
+  done  
