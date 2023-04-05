@@ -1,4 +1,4 @@
-let read_int (a : unit) : int = 42 
+let read_int (a : unit) : int = 3
 
 let main : unit = 
   let move (source : array of char) (target : array of char) : unit =
