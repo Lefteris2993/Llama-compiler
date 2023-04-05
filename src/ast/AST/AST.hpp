@@ -49,6 +49,17 @@ protected:
   static llvm::Function *TheStringCopy;
   static llvm::Function *TheWriteChar;
   static llvm::Function *ThePrintCharInternal;
+  static llvm::Function *TheWriteBoolean;
+  static llvm::Function *ThePrintBoolInternal;
+
+  static llvm::Function *TheReadInteger;
+  static llvm::Function *TheReadIntInternal;
+  static llvm::Function *TheReadBoolean;
+  static llvm::Function *TheReadBoolInternal;
+  static llvm::Function *TheReadChar;
+  static llvm::Function *TheReadCharInternal;
+  static llvm::Function *TheReadString;
+  static llvm::Function *TheReadStringInternal;
 
 private:
   void codegenLibs();

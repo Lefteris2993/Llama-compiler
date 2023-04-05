@@ -42,7 +42,7 @@ bool Type::equal_types(const Type *t1, const Type *t2) {
   }
     
   case TypeClassType::REF: {
-    Type *a1 = ((RefType *) t2)->getType();
+    Type *a1 = ((RefType *) t1)->getType();
     Type *a2 = ((RefType *) t2)->getType();
     return Type::equal_types(a1, a2);
   }

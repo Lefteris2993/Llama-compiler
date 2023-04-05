@@ -28,6 +28,17 @@ llvm::Function *AST::ThePrintIntInternal;
 llvm::Function *AST::TheStringCopy;
 llvm::Function *AST::TheWriteChar;
 llvm::Function *AST::ThePrintCharInternal;
+llvm::Function *AST::TheWriteBoolean;
+llvm::Function *AST::ThePrintBoolInternal;
+
+llvm::Function *AST::TheReadInteger;
+llvm::Function *AST::TheReadIntInternal;
+llvm::Function *AST::TheReadBoolean;
+llvm::Function *AST::TheReadBoolInternal;
+llvm::Function *AST::TheReadChar;
+llvm::Function *AST::TheReadCharInternal;
+llvm::Function *AST::TheReadString;
+llvm::Function *AST::TheReadStringInternal;
 
 AST::~AST() {}
 
@@ -240,6 +251,102 @@ void AST::codegenLibs() {
   Builder.CreateRet(llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit")));
   TheFPM->run(*ThePrintCharInternal);
   LLVMValueStore->newLLVMValue("print_char", ThePrintCharInternal);
+
+  /* writeBoolean - lib.a */
+  llvm::FunctionType *writeBoolean_type =
+    llvm::FunctionType::get(llvm::Type::getVoidTy(TheContext), { i1 }, false);
+  TheWriteBoolean =
+    llvm::Function::Create(writeBoolean_type, llvm::Function::ExternalLinkage,
+                  "writeBoolean", TheModule.get());
+  /* print_bool */
+  llvm::FunctionType *printBool_type = 
+    llvm::FunctionType::get(TheModule->getTypeByName("unit"), { i1 }, false);
+  ThePrintBoolInternal =
+    llvm::Function::Create(printBool_type, llvm::Function::InternalLinkage,
+                  "print_bool", TheModule.get());
+  llvm::BasicBlock *ThePrintBoolBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", ThePrintBoolInternal);
+  Builder.SetInsertPoint(ThePrintBoolBB);
+  Builder.CreateCall(TheWriteBoolean, { ThePrintBoolInternal->getArg(0) });
+  Builder.CreateRet(llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit")));
+  TheFPM->run(*ThePrintBoolInternal);
+  LLVMValueStore->newLLVMValue("print_bool", ThePrintBoolInternal);
+
+  /* readInteger - lib.a */
+  llvm::FunctionType *readInteger_type =
+    llvm::FunctionType::get(i32, false);
+  TheReadInteger =
+    llvm::Function::Create(readInteger_type, llvm::Function::ExternalLinkage,
+                  "readInteger", TheModule.get());
+  /* read_int */
+  llvm::FunctionType *readInt_type = 
+    llvm::FunctionType::get(i32, { TheModule->getTypeByName("unit") }, false);
+  TheReadIntInternal =
+    llvm::Function::Create(readInt_type, llvm::Function::InternalLinkage,
+                  "read_int", TheModule.get());
+  llvm::BasicBlock *TheReadIntBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", TheReadIntInternal);
+  Builder.SetInsertPoint(TheReadIntBB);
+  Builder.CreateRet(Builder.CreateCall(TheReadInteger));
+  TheFPM->run(*TheReadIntInternal);
+  LLVMValueStore->newLLVMValue("read_int", TheReadIntInternal);
+  
+  /* readBoolean - lib.a */
+  llvm::FunctionType *readBoolean_type =
+    llvm::FunctionType::get(i1, false);
+  TheReadBoolean =
+    llvm::Function::Create(readBoolean_type, llvm::Function::ExternalLinkage,
+                  "readBoolean", TheModule.get());
+  /* read_bool */
+  llvm::FunctionType *readBool_type = 
+    llvm::FunctionType::get(i1, { TheModule->getTypeByName("unit") }, false);
+  TheReadBoolInternal =
+    llvm::Function::Create(readBool_type, llvm::Function::InternalLinkage,
+                  "read_bool", TheModule.get());
+  llvm::BasicBlock *TheReadBoolBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", TheReadBoolInternal);
+  Builder.SetInsertPoint(TheReadBoolBB);
+  Builder.CreateRet(Builder.CreateCall(TheReadBoolean));
+  TheFPM->run(*TheReadBoolInternal);
+  LLVMValueStore->newLLVMValue("read_bool", TheReadBoolInternal);
+  
+  /* readChar - lib.a */
+  llvm::FunctionType *readCharacter_type =
+    llvm::FunctionType::get(i8, false);
+  TheReadChar =
+    llvm::Function::Create(readCharacter_type, llvm::Function::ExternalLinkage,
+                  "readChar", TheModule.get());
+  /* read_char */
+  llvm::FunctionType *readChar_type = 
+    llvm::FunctionType::get(i8, { TheModule->getTypeByName("unit") }, false);
+  TheReadCharInternal =
+    llvm::Function::Create(readChar_type, llvm::Function::InternalLinkage,
+                  "read_char", TheModule.get());
+  llvm::BasicBlock *TheReadCharBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", TheReadCharInternal);
+  Builder.SetInsertPoint(TheReadCharBB);
+  Builder.CreateRet(Builder.CreateCall(TheReadChar));
+  TheFPM->run(*TheReadCharInternal);
+  LLVMValueStore->newLLVMValue("read_char", TheReadCharInternal);
+
+  /* readString - lib.a */
+  llvm::FunctionType *readString_type =
+    llvm::FunctionType::get(llvm::Type::getVoidTy(TheContext),
+                      { i32, llvm::PointerType::get(i8, 0) }, false);
+  TheReadString =
+    llvm::Function::Create(readString_type, llvm::Function::ExternalLinkage,
+                  "readString", TheModule.get());
+  /* read_string */
+  llvm::FunctionType *readStringInternal_type =
+    llvm::FunctionType::get(TheModule->getTypeByName("unit"), { stringType->getPointerTo() }, false);
+  TheReadStringInternal =
+    llvm::Function::Create(readStringInternal_type, llvm::Function::InternalLinkage,
+                  "read_string", TheModule.get());
+  llvm::BasicBlock *TheReadStringInternalBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", TheReadStringInternal);
+  Builder.SetInsertPoint(TheReadStringInternalBB);
+  llvm::Value *strPtr = Builder.CreateLoad(Builder.CreateGEP(stringType, TheReadStringInternal->getArg(0), { c32(0), c32(0) }, "stringPtr"));
+  llvm::Value *sizePtr = Builder.CreateLoad(Builder.CreateGEP(stringType, TheReadStringInternal->getArg(0), { c32(0), c32(2) }, "sizePtr"));
+  Builder.CreateCall(TheReadString, { sizePtr, strPtr });
+  Builder.CreateRet(llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit")));
+  TheFPM->run(*TheReadStringInternal);
+  LLVMValueStore->newLLVMValue("read_string", TheReadStringInternal);
+
 }
 
 /// CreateEntryBlockAlloca - Create an alloca instruction in the entry block of

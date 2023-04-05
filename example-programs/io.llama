@@ -1,0 +1,28 @@
+-- read_bool and read_string are kind of fragile
+-- not sure why i believe it has to do something with lib.a
+
+let mutable str[42] : char
+
+let main =
+  print_string "enter a boolean: ";
+  let c = read_bool() in
+  print_string "you entered: ";
+  print_bool c;
+
+  print_string "enter a string: ";
+  read_string str;
+  print_string "you entered: ";
+  print_string str;
+  print_string "\n";
+
+  print_string "enter an integer: ";
+  let a = read_int() in
+  print_string "you entered: ";
+  print_int a;
+  print_string "\n";
+
+  print_string "enter a character: ";
+  let b = read_char() in
+  print_string "you entered: ";
+  print_char b;
+  print_string "\n"
