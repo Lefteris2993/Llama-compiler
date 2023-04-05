@@ -7,3 +7,7 @@ void BoolPattern::printOn(std::ostream &out) const {
 }
 
 void BoolPattern::sem() { type = boolType; }
+
+llvm::Value* BoolPattern::codegen() {
+  return c1(val);
+}

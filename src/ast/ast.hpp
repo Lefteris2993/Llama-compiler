@@ -5,7 +5,6 @@
 #include "Stmt/Stmt.hpp"
 #include "Def/Def.hpp"
 #include "Expr/Expr.hpp"
-#include "Pattern/Pattern.hpp"
 #include "ExprBlock/ExprBlock.hpp"
 #include "NumPattern/NumPattern.hpp"
 #include "CharPattern/CharPattern.hpp"

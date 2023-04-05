@@ -13,9 +13,11 @@ public:
   void append(Clause *c);
   virtual void sem() override;
   virtual void printOn(std::ostream &out) const override;
-
+  std::vector<Clause*> getClauses();
+  Type * getClausesExprsType();
 private:
   std::vector<Clause*> clauses;
+  Type *clausesExprsType;
 };
 
 

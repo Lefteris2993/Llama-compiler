@@ -21,7 +21,7 @@ let main =
       if i > 0 then print_string ", ";
       print_int !x[i]
     done;
-    print_string "new_line" in
+    print_string "\n" in
 
   let mutable seed : int
   and mutable x[16] : int in

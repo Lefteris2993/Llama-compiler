@@ -14,6 +14,6 @@ protected:
 
 typedef Expr HighPrioExpr;
 
-
+typedef Expr Pattern;
 
 #endif

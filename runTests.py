@@ -22,6 +22,7 @@ tests = [
   ['array.llama', True],
   ['newDelete.llama', True],
   ['2DArray.llama', True],
+  ['workingMatch.llama', True],
 ]
 
 failed = 0

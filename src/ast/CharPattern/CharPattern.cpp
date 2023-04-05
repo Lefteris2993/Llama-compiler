@@ -7,3 +7,7 @@ void CharPattern::printOn(std::ostream &out) const {
 }
 
 void CharPattern::sem() { type = charType; }
+
+llvm::Value* CharPattern::codegen() {
+  return c8(var);
+}

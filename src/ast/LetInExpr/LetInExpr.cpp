@@ -17,6 +17,5 @@ void LetInExpr::sem() {
 
 llvm::Value* LetInExpr::codegen() {
   let->codegen();
-  expr->codegen();
-  return nullptr;
+  return expr->codegen();
 }

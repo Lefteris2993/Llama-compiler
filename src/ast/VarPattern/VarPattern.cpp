@@ -19,3 +19,8 @@ void VarPattern::sem() {
     Logger::error(lineno, "\"%s\" is function 1", s->id.c_str());
   type = s->type;
 }
+
+llvm::Value* VarPattern::codegen() {
+  LLVMSymbolEntry *s  = LLVMValueStore->lookupEntry<LLVMSymbolEntry>(var, true);
+  return s->value;
+}

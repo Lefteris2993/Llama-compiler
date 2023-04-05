@@ -33,4 +33,9 @@ void ClauseBlock::sem() {
       Logger::error(c->lineno, "Match expresion patterns must be the same type");
     }
   }
+  clausesExprsType = exprType;
 }
+
+std::vector<Clause*> ClauseBlock::getClauses() { return clauses; }
+
+Type *ClauseBlock::getClausesExprsType() { return clausesExprsType; }

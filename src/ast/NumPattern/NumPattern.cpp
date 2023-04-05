@@ -7,3 +7,11 @@ void NumPattern::printOn(std::ostream &out) const {
 }
 
 void NumPattern::sem() { type = intType; }
+
+llvm::Value* NumPattern::codegen() {
+  if (negative) {
+    return c32(0 - num);
+  } else {
+    return c32(num);
+  }
+}

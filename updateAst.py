@@ -21,6 +21,7 @@ files = [
  'array',
  'newDelete',
  '2DArray',
+ 'workingMatch',
  'test',
 ]
 

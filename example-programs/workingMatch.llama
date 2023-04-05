@@ -1,0 +1,15 @@
+let foo (x : int) = (x + 42) mod 17
+
+let bar (x : int) = 
+  let a = foo 0 in
+  let b = foo a in
+  let c = foo b in
+  match x with
+      a -> 0
+    | b -> 17
+    | c -> 42
+  end
+
+let main = 
+  print_int (bar 7);
+  print_string "\n"

@@ -3,7 +3,7 @@
 
 #include "../AST/AST.hpp"
 #include "../Expr/Expr.hpp"
-#include "../Pattern/Pattern.hpp"
+#include "../Expr/Expr.hpp"
 
 class Clause: public AST {
 public:
@@ -11,7 +11,6 @@ public:
   ~Clause();
   virtual void sem() override;
   virtual void printOn(std::ostream &out) const override;
-
   Pattern *getPattern();
   Expr *getExpr();
 private:
