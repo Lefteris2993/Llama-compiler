@@ -24,6 +24,7 @@ tests = [
   ['newDelete', True],
   ['2DArray', True],
   ['workingMatch', True],
+  ['lib', True],
 ]
 
 failed = 0

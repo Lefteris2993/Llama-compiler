@@ -22,6 +22,7 @@ files = [
  'newDelete',
  '2DArray',
  'workingMatch',
+ 'lib',
  'test',
 ]
 

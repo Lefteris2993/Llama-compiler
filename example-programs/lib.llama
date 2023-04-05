@@ -1,0 +1,48 @@
+let sep (x : unit) = print_string "\n"
+
+let main =
+  print_int (abs (-42));
+  sep();
+
+  let x : int ref = new int in
+  x := 17;
+  incr x;
+  print_int !x;
+  sep();
+
+  decr x;
+  print_int !x;
+  sep();
+
+  let a = 'a' in
+  print_int (int_of_char a);
+  sep();
+
+  let b = 98 in
+  print_char (char_of_int b);
+  sep();
+
+  let c1 = "some_string_1" in
+  let c2 = "some_string_2" in
+  print_int (strlen c1);
+  sep();
+
+  print_int (strcmp c1 c2);
+  sep();
+
+  print_int (strcmp c2 c1);
+  sep();
+
+  print_int (strcmp c1 c1);
+  sep();
+
+  strcpy c1 c2;
+  print_string c1;
+  sep();
+
+  strcat c1 c2;
+  print_string c1;
+  sep();
+  print_string c2;
+  sep()
+  

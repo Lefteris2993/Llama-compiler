@@ -25,7 +25,6 @@ llvm::Function *AST::TheWriteString;
 llvm::Function *AST::ThePrintStringInternal;
 llvm::Function *AST::TheWriteInteger;
 llvm::Function *AST::ThePrintIntInternal;
-llvm::Function *AST::TheStringCopy;
 llvm::Function *AST::TheWriteChar;
 llvm::Function *AST::ThePrintCharInternal;
 llvm::Function *AST::TheWriteBoolean;
@@ -39,6 +38,24 @@ llvm::Function *AST::TheReadChar;
 llvm::Function *AST::TheReadCharInternal;
 llvm::Function *AST::TheReadString;
 llvm::Function *AST::TheReadStringInternal;
+
+llvm::Function *AST::TheAbs;
+llvm::Function *AST::TheIncr;
+llvm::Function *AST::TheDecr;
+
+llvm::Function *AST::TheOrd;
+llvm::Function *AST::TheIntOfChar;
+llvm::Function *AST::TheChr;
+llvm::Function *AST::TheCharOfInt;
+
+llvm::Function *AST::TheStringLength;
+llvm::Function *AST::TheStringLengthInternal;
+llvm::Function *AST::TheStringCompare;
+llvm::Function *AST::TheStringCompareInternal;
+llvm::Function *AST::TheStringCopy;
+llvm::Function *AST::TheStringCopyInternal;
+llvm::Function *AST::TheStringConcat;
+llvm::Function *AST::TheStringConcatInternal;
 
 AST::~AST() {}
 
@@ -226,13 +243,6 @@ void AST::codegenLibs() {
   TheFPM->run(*ThePrintIntInternal);
   LLVMValueStore->newLLVMValue("print_int", ThePrintIntInternal);
 
-  /* strcpy - lib.a */
-  llvm::FunctionType *stringCopy_type =
-    llvm::FunctionType::get(llvm::Type::getVoidTy(TheContext), { llvm::PointerType::get(i8, 0), llvm::PointerType::get(i8, 0) }, false);
-  TheStringCopy =
-    llvm::Function::Create(stringCopy_type, llvm::Function::ExternalLinkage,
-                  "strcpy", TheModule.get());
-
   /* writeChar - lib.a */
   llvm::FunctionType *writeChar_type =
     llvm::FunctionType::get(llvm::Type::getVoidTy(TheContext), { i8 }, false);
@@ -347,6 +357,160 @@ void AST::codegenLibs() {
   TheFPM->run(*TheReadStringInternal);
   LLVMValueStore->newLLVMValue("read_string", TheReadStringInternal);
 
+  /* abs */
+  llvm::FunctionType *abs_type =
+    llvm::FunctionType::get(i32, std::vector<llvm::Type *> { i32 }, false);
+  TheAbs =
+    llvm::Function::Create(abs_type, llvm::Function::ExternalLinkage,
+                  "abs", TheModule.get());
+  LLVMValueStore->newLLVMValue("abs", TheAbs);
+
+  /* incr */
+  llvm::FunctionType *incr_type =
+    llvm::FunctionType::get(TheModule->getTypeByName("unit"), { llvm::PointerType::get(i32, 0) }, false);
+  TheIncr =
+    llvm::Function::Create(incr_type, llvm::Function::InternalLinkage,
+                  "incr", TheModule.get());
+  llvm::BasicBlock *TheIncrBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", TheIncr);
+  Builder.SetInsertPoint(TheIncrBB);
+  llvm::Value *valToIncr = Builder.CreateLoad(TheIncr->getArg(0));
+  llvm::Value *valIncreased = Builder.CreateAdd(valToIncr, c32(1));
+  Builder.CreateStore(valIncreased, TheIncr->getArg(0));
+  Builder.CreateRet(llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit")));
+  TheFPM->run(*TheIncr);
+  LLVMValueStore->newLLVMValue("incr", TheIncr);
+  
+  /* decr */
+  llvm::FunctionType *decr_type =
+    llvm::FunctionType::get(TheModule->getTypeByName("unit"), { llvm::PointerType::get(i32, 0) }, false);
+  TheDecr =
+    llvm::Function::Create(decr_type, llvm::Function::InternalLinkage,
+                  "decr", TheModule.get());
+  llvm::BasicBlock *TheDecrBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", TheDecr);
+  Builder.SetInsertPoint(TheDecrBB);
+  llvm::Value *valToDecr = Builder.CreateLoad(TheDecr->getArg(0));
+  llvm::Value *valDecreased = Builder.CreateSub(valToDecr, c32(1));
+  Builder.CreateStore(valDecreased, TheDecr->getArg(0));
+  Builder.CreateRet(llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit")));
+  TheFPM->run(*TheDecr);
+  LLVMValueStore->newLLVMValue("decr", TheDecr);
+
+  /* ord - lib.a */
+  llvm::FunctionType *ord_type =
+    llvm::FunctionType::get(i32, std::vector<llvm::Type *> { i8 }, false);
+  TheOrd =
+    llvm::Function::Create(ord_type, llvm::Function::ExternalLinkage,
+                  "ord", TheModule.get());
+  /* int_of_char */
+  llvm::FunctionType *intOfChar_type = 
+    llvm::FunctionType::get(i32, { i8 }, false);
+  TheIntOfChar =
+    llvm::Function::Create(intOfChar_type, llvm::Function::InternalLinkage,
+                  "int_of_char", TheModule.get());
+  llvm::BasicBlock *TheIntOfCharBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", TheIntOfChar);
+  Builder.SetInsertPoint(TheIntOfCharBB);
+  Builder.CreateRet(Builder.CreateCall(TheOrd, { TheIntOfChar->getArg(0) }));
+  TheFPM->run(*TheIntOfChar);
+  LLVMValueStore->newLLVMValue("int_of_char", TheIntOfChar);
+
+  /* TheChr */
+  llvm::FunctionType *chr_type =
+    llvm::FunctionType::get(i8, std::vector<llvm::Type *> { i32 }, false);
+  TheChr =
+    llvm::Function::Create(chr_type, llvm::Function::ExternalLinkage,
+                  "chr", TheModule.get());
+  /* char_of_int */
+  llvm::FunctionType *charOfInt_type = 
+  llvm::FunctionType::get(i8, { i32 }, false);
+  TheCharOfInt =
+    llvm::Function::Create(charOfInt_type, llvm::Function::InternalLinkage,
+                  "char_of_int", TheModule.get());
+  llvm::BasicBlock *TheCharOfIntBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", TheCharOfInt);
+  Builder.SetInsertPoint(TheCharOfIntBB);
+  Builder.CreateRet(Builder.CreateCall(TheChr, { TheCharOfInt->getArg(0) }));
+  TheFPM->run(*TheCharOfInt);
+  LLVMValueStore->newLLVMValue("char_of_int", TheCharOfInt);
+
+  /* strlen - lib.a */
+  llvm::FunctionType *stringLength_type =
+    llvm::FunctionType::get(i32, { llvm::PointerType::get(i8, 0) }, false);
+  TheStringLength =
+    llvm::Function::Create(stringLength_type, llvm::Function::ExternalLinkage,
+                  "strlen", TheModule.get());
+  /* strlen */
+  llvm::FunctionType *strlen_type = 
+    llvm::FunctionType::get(i32, { stringType->getPointerTo() }, false);
+  TheStringLengthInternal =
+    llvm::Function::Create(strlen_type, llvm::Function::InternalLinkage,
+                  "strlen", TheModule.get());
+  llvm::BasicBlock *TheStringLengthInternalBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", TheStringLengthInternal);
+  Builder.SetInsertPoint(TheStringLengthInternalBB);
+  llvm::Value *strlen_strPtr = Builder.CreateLoad(Builder.CreateGEP(stringType, TheStringLengthInternal->getArg(0), { c32(0), c32(0) }, "stringPtr"));
+  Builder.CreateRet(Builder.CreateCall(TheStringLength, { strlen_strPtr }));
+  TheFPM->run(*TheStringLengthInternal);
+  LLVMValueStore->newLLVMValue("strlen", TheStringLengthInternal);
+  
+  /* strcmp - lib.a */
+  llvm::FunctionType *stringCompare_type =
+    llvm::FunctionType::get(i32, { llvm::PointerType::get(i8, 0), llvm::PointerType::get(i8, 0) }, false);
+  TheStringCompare =
+    llvm::Function::Create(stringCompare_type, llvm::Function::ExternalLinkage,
+                  "strcmp", TheModule.get());
+  /* strcmp */
+  llvm::FunctionType *strcmp_type = 
+    llvm::FunctionType::get(i32, { stringType->getPointerTo(), stringType->getPointerTo() }, false);
+  TheStringCompareInternal =
+    llvm::Function::Create(strcmp_type, llvm::Function::InternalLinkage,
+                  "strcmp", TheModule.get());
+  llvm::BasicBlock *TheStringCompareInternalBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", TheStringCompareInternal);
+  Builder.SetInsertPoint(TheStringCompareInternalBB);
+  llvm::Value *strcmp_strPtr1 = Builder.CreateLoad(Builder.CreateGEP(stringType, TheStringCompareInternal->getArg(0), { c32(0), c32(0) }, "stringPtr1"));
+  llvm::Value *strcmp_strPtr2 = Builder.CreateLoad(Builder.CreateGEP(stringType, TheStringCompareInternal->getArg(1), { c32(0), c32(0) }, "stringPtr2"));
+  Builder.CreateRet(Builder.CreateCall(TheStringCompare, { strcmp_strPtr1, strcmp_strPtr2 }));
+  TheFPM->run(*TheStringCompareInternal);
+  LLVMValueStore->newLLVMValue("strcmp", TheStringCompareInternal);  
+  
+  /* strcpy - lib.a */
+  llvm::FunctionType *stringCopy_type =
+    llvm::FunctionType::get(llvm::Type::getVoidTy(TheContext), { llvm::PointerType::get(i8, 0), llvm::PointerType::get(i8, 0) }, false);
+  TheStringCopy =
+    llvm::Function::Create(stringCopy_type, llvm::Function::ExternalLinkage,
+                  "strcpy", TheModule.get());
+  /* strcpy */
+  llvm::FunctionType *strcpy_type = 
+    llvm::FunctionType::get(TheModule->getTypeByName("unit"), { stringType->getPointerTo(), stringType->getPointerTo() }, false);
+  TheStringCopyInternal =
+    llvm::Function::Create(strcpy_type, llvm::Function::InternalLinkage,
+                  "strcpy", TheModule.get());
+  llvm::BasicBlock *TheStringCopyInternalBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", TheStringCopyInternal);
+  Builder.SetInsertPoint(TheStringCopyInternalBB);
+  llvm::Value *strcpy_strPtr1 = Builder.CreateLoad(Builder.CreateGEP(stringType, TheStringCopyInternal->getArg(0), { c32(0), c32(0) }, "stringPtr"));
+  llvm::Value *strcpy_strPtr2 = Builder.CreateLoad(Builder.CreateGEP(stringType, TheStringCopyInternal->getArg(1), { c32(0), c32(0) }, "stringPtr"));
+  Builder.CreateCall(TheStringCopy, { strcpy_strPtr1, strcpy_strPtr2 });
+  Builder.CreateRet(llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit")));
+  TheFPM->run(*TheStringCopyInternal);
+  LLVMValueStore->newLLVMValue("strcpy", TheStringCopyInternal); 
+  
+  /* strcat - lib.a */
+  llvm::FunctionType *stringConcat_type =
+    llvm::FunctionType::get(llvm::Type::getVoidTy(TheContext), { llvm::PointerType::get(i8, 0), llvm::PointerType::get(i8, 0) }, false);
+  TheStringConcat =
+    llvm::Function::Create(stringConcat_type, llvm::Function::ExternalLinkage,
+                  "strcat", TheModule.get());
+  /* strcat */
+  llvm::FunctionType *strcat_type = 
+    llvm::FunctionType::get(TheModule->getTypeByName("unit"), { stringType->getPointerTo(), stringType->getPointerTo() }, false);
+  TheStringConcatInternal =
+    llvm::Function::Create(strcat_type, llvm::Function::InternalLinkage,
+                  "strcat", TheModule.get());
+  llvm::BasicBlock *TheStringConcatInternalBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", TheStringConcatInternal);
+  Builder.SetInsertPoint(TheStringConcatInternalBB);
+  llvm::Value *strcat_strPtr1 = Builder.CreateLoad(Builder.CreateGEP(stringType, TheStringConcatInternal->getArg(0), { c32(0), c32(0) }, "stringPtr1"));
+  llvm::Value *strcat_strPtr2 = Builder.CreateLoad(Builder.CreateGEP(stringType, TheStringConcatInternal->getArg(1), { c32(0), c32(0) }, "stringPtr2"));
+  Builder.CreateCall(TheStringConcat, { strcat_strPtr1, strcat_strPtr2 });
+  Builder.CreateRet(llvm::ConstantAggregateZero::get(TheModule->getTypeByName("unit")));
+  TheFPM->run(*TheStringConcatInternal);
+  LLVMValueStore->newLLVMValue("strcat", TheStringConcatInternal); 
 }
 
 /// CreateEntryBlockAlloca - Create an alloca instruction in the entry block of

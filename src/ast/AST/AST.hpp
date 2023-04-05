@@ -46,7 +46,6 @@ protected:
   static llvm::Function *ThePrintStringInternal;
   static llvm::Function *TheWriteInteger;
   static llvm::Function *ThePrintIntInternal;
-  static llvm::Function *TheStringCopy;
   static llvm::Function *TheWriteChar;
   static llvm::Function *ThePrintCharInternal;
   static llvm::Function *TheWriteBoolean;
@@ -60,6 +59,24 @@ protected:
   static llvm::Function *TheReadCharInternal;
   static llvm::Function *TheReadString;
   static llvm::Function *TheReadStringInternal;
+
+  static llvm::Function *TheAbs;
+  static llvm::Function *TheIncr;
+  static llvm::Function *TheDecr;
+
+  static llvm::Function *TheOrd;
+  static llvm::Function *TheIntOfChar;
+  static llvm::Function *TheChr;
+  static llvm::Function *TheCharOfInt;
+
+  static llvm::Function *TheStringLength;
+  static llvm::Function *TheStringLengthInternal;
+  static llvm::Function *TheStringCompare;
+  static llvm::Function *TheStringCompareInternal;
+  static llvm::Function *TheStringCopy;
+  static llvm::Function *TheStringCopyInternal;
+  static llvm::Function *TheStringConcat;
+  static llvm::Function *TheStringConcatInternal;
 
 private:
   void codegenLibs();
