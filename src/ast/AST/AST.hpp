@@ -60,4 +60,6 @@ inline std::ostream& operator<< (std::ostream &out, const AST &t) {
   return out;
 }
 
+typedef AST Stmt;
+
 #endif

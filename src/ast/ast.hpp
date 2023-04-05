@@ -2,7 +2,6 @@
 #define __AST_COMBINED_HPP__
 
 #include "AST/AST.hpp"
-#include "Stmt/Stmt.hpp"
 #include "Def/Def.hpp"
 #include "Expr/Expr.hpp"
 #include "ExprBlock/ExprBlock.hpp"

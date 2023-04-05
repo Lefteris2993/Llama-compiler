@@ -15,6 +15,7 @@ public:
   virtual void printOn(std::ostream &out) const override;
   std::vector<Clause*> getClauses();
   Type * getClausesExprsType();
+  // llvm::Value* codegen() is indirectly implemented in MatchExpr
 private:
   std::vector<Clause*> clauses;
   Type *clausesExprsType;

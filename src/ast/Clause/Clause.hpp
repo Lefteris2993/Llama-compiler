@@ -13,6 +13,7 @@ public:
   virtual void printOn(std::ostream &out) const override;
   Pattern *getPattern();
   Expr *getExpr();
+  // llvm::Value* codegen() is indirectly implemented in MatchExpr
 private:
   Pattern *pattern;
   Expr *expr;

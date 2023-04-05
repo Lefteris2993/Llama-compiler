@@ -1,7 +1,7 @@
 #ifndef __Def_HPP__
 #define __Def_HPP__
 
-#include "../Stmt/Stmt.hpp"
+#include "../AST/AST.hpp"
 #include "../../types/types.hpp"
 
 class Def: public Stmt {

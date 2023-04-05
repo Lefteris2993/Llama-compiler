@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 
-#include "../Stmt/Stmt.hpp"
+#include "../AST/AST.hpp"
 #include "../Def/Def.hpp"
 
 class DefBlock: public Stmt {
