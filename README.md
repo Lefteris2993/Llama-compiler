@@ -11,7 +11,15 @@ Llama compiler for ece ntua compilers class 2021
 
 ## Build
 
-`make`
+After installing the above requirements use `make` to build the compiler.
+Then you can use it as follows:
+
+`./do.sh [path/to/llama] [...options]`
+
+The available options are:
+- `-O` run optimizations
+- `-f` print .asm to stdout
+- `-i` print intermediate code to stdout
 
 ## Testing
 

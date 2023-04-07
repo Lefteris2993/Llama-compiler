@@ -16,6 +16,7 @@ extern Type *stringType;
 
 extern int yylineno;
 
+bool optimize = false;
 SymbolTable *symbolTable;
 %}
 
@@ -136,7 +137,7 @@ program:
   stmt_list { 
     // std::cout << "AST:" << *$1 << std::endl;
     $1->sem();
-    $1->llvm_compile_and_dump();
+    $1->llvm_compile_and_dump(optimize);
    }
 ;
 
@@ -275,8 +276,11 @@ pattern:
 
 %%
 
-int main () {
-  symbolTable = new SymbolTable(42);
+int main (int argc, char *argv[]) {
+  if(argc > 1 && strcmp(argv[1], "-O") == 0)
+      optimize = true;
+
+  symbolTable = new SymbolTable(10000);
   symbolTable->openScope();
   Library::insertFunctionsToScope(symbolTable);
   symbolTable->openScope();

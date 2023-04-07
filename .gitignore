@@ -12,4 +12,5 @@ temp
 *.ll
 *.out
 *.asm
+*.imm
 example-programs/test.llama
