@@ -40,8 +40,9 @@ for [test, shouldPass] in tests:
     if not shouldPass:
       continue
 
-  os.system("scp a.out ubuntu16:~/.")
-  os.system(f"ssh ubuntu16 './a.out' > .test.temp 2>&1")
+  # os.system("scp a.out ubuntu16:~/.")
+  # os.system(f"ssh ubuntu16 './a.out' > .test.temp 2>&1")
+  os.system(f"./example-programs/{test}.out > .test.temp 2>&1")
   comp = filecmp.cmp('.test.temp', f"./example-programs/outputs/{test}")
   if (not comp):
     print(f"{test}: failed output mismatched")
