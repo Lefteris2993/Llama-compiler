@@ -55,6 +55,7 @@ llvm::Value* IfThenElseExpr::codegen() {
   
   Builder.SetInsertPoint(ThenBB);
   thenValue = expr1->codegen();
+  ThenBB = Builder.GetInsertBlock();
   Builder.CreateBr(AfterBB);
 
   Builder.SetInsertPoint(ElseBB);
