@@ -12,14 +12,15 @@ public:
   ImmutableDefFunc(std::string i, ParBlock *p, Expr *e, Type *t = nullptr);
   ~ImmutableDefFunc();
   virtual DefType getDefType() const override;
+  virtual std::string getId() const override;
   virtual void sem() override;
   void decl();
   virtual void printOn(std::ostream &out) const override;
   virtual llvm::Value* codegen() override;
-  llvm::Value* defCodeGen();
+  void funGen(llvm::Function *fi = nullptr);
+  llvm::Function* defCodeGen();
 
 private:
-  std::string id;
   Expr *expr;
   ParBlock *block;
   Type *type;

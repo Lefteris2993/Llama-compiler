@@ -4,8 +4,9 @@
 
 extern SymbolTable *symbolTable;
 
-MutableDef::MutableDef(std::string i, Type *t): id(i) {
+MutableDef::MutableDef(std::string i, Type *t) {
   type = new RefType(t);
+  this->id = i;
 }
 
 MutableDef::~MutableDef() { delete type; }
@@ -18,6 +19,8 @@ void MutableDef::printOn(std::ostream &out) const {
   out << ")";
 }
 
+std::string MutableDef::getId() const { return id; }
+
 void MutableDef::sem() {
   if (type == nullptr)
     Logger::error(lineno, "Definition of \"%s\" does not contain a type", id.c_str());
@@ -29,7 +32,6 @@ void MutableDef::sem() {
 llvm::Value* MutableDef::codegen() {
   llvm::Function *TheFunction = Builder.GetInsertBlock()->getParent();
   llvm::AllocaInst *Alloca = CreateEntryBlockAlloca(TheFunction, id, getLLVMType(type)->getPointerElementType());
-
-  LLVMValueStore->newLLVMValue(id, Alloca);
+  
   return Alloca;
 }

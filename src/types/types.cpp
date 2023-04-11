@@ -132,6 +132,7 @@ std::string RefType::typeName() const {
   return "ref_" + t;
 }
 Type* RefType::getType() { return this->type; }
+void RefType::setType(Type* t) { this->type = t; }
 
 Type *intType = new SimpleType(INT);
 Type *unitType = new SimpleType(UNIT);

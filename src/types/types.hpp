@@ -75,6 +75,7 @@ public:
   virtual void printOn(std::ostream &out) const override;
   virtual std::string typeName() const override;
   Type *getType();
+  void setType(Type* t);
 private:
   Type *type;
 };

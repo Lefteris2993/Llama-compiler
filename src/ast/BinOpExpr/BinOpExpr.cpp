@@ -52,11 +52,14 @@ void BinOpExpr::sem() {
     }
     
     case ASS: {
-      if (lhs->getType() == nullptr)
+      if (l == nullptr)
         Logger::error(lineno, "Expresion has unkown type");
-      if (lhs->getType()->getClassType() != TypeClassType::REF) 
+      else if (l->getClassType() != TypeClassType::REF) 
         Logger::error(lineno, "Left side of operator \":=\" is not a reference type");
-      if (!Type::equal_types(((RefType *) lhs->getType())->getType(), rhs->getType()))
+      else if (((RefType *) l)->getType() == nullptr) {
+        ((RefType *) l)->setType(r);
+      }
+      else if (!Type::equal_types(((RefType *) l)->getType(), r))
         Logger::error(lineno, "Left and right side of assignment operator \":=\" have not the same type");
       
       type = unitType;

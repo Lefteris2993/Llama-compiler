@@ -8,7 +8,9 @@ ImmutableDefFunc::ImmutableDefFunc(
   ParBlock *p,  
   Expr *e, 
   Type *t
-): id(i), expr(e), block(p), type(t) {}
+): expr(e), block(p), type(t) {
+  this->id = i;
+}
 
 ImmutableDefFunc::~ImmutableDefFunc() { delete expr; delete block; delete type; }
 
@@ -19,6 +21,8 @@ void ImmutableDefFunc::printOn(std::ostream &out) const {
   if (type != nullptr) out << "," << *type; 
   out << ")";
 }
+
+std::string ImmutableDefFunc::getId() const { return id; }
 
 void ImmutableDefFunc::sem() {
   const int blockSize = block->block.size();
@@ -58,22 +62,24 @@ void ImmutableDefFunc::decl() {
   symbolTable->closeScope();
 }
 
-llvm::Value* ImmutableDefFunc::defCodeGen() {
+llvm::Function* ImmutableDefFunc::defCodeGen() {
   llvm::FunctionType *FT = 
     llvm::FunctionType::get(getLLVMType(type), block->getParams(), false);
   llvm::Function *functionInternal =
     llvm::Function::Create(FT, llvm::Function::InternalLinkage,
                   id, TheModule.get());
-  LLVMValueStore->newLLVMValue(id, functionInternal);
-  return nullptr;
+  return functionInternal;
 }
 
-
-llvm::Value* ImmutableDefFunc::codegen() {
+void ImmutableDefFunc::funGen(llvm::Function *fi) {
   llvm::BasicBlock *ParentBB = Builder.GetInsertBlock();
   
-  LLVMSymbolEntry *v  = LLVMValueStore->lookupEntry<LLVMSymbolEntry>(id, true);
-  llvm::Function *functionInternal = (llvm::Function *) v->value;
+  llvm::Function *functionInternal = fi;
+  if (fi == nullptr) {
+    LLVMSymbolEntry *v  = LLVMValueStore->lookupEntry<LLVMSymbolEntry>(id, true);
+    functionInternal = (llvm::Function *) v->value;
+  } 
+
   llvm::BasicBlock *functionBB = llvm::BasicBlock::Create(TheModule->getContext(), "entry", functionInternal);
   Builder.SetInsertPoint(functionBB);
 
@@ -99,5 +105,6 @@ llvm::Value* ImmutableDefFunc::codegen() {
 
   
   Builder.SetInsertPoint(ParentBB);
-  return nullptr;
 }
+
+llvm::Value* ImmutableDefFunc::codegen() { return nullptr; }

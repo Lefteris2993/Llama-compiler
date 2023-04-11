@@ -1,6 +1,9 @@
-let a = 42
-let b = 17
+let x = 2
+let y = 4
+let x = y
+and y = x
 
-let b = 11
-
-let c = 42
+let main =
+   print_int x;
+   print_int y;
+   print_string "\n"

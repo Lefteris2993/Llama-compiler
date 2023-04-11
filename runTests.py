@@ -11,7 +11,7 @@ tests = [
   ['hello', True],
   ['letin', True],
   ['match', False],                   # different return types in clauses
-  ['sameNames', False],               # identifier re declaration
+  ['sameNames', True],
   ['variableNotDeclared', False],     # Unknown identifier: b
   ['printInt', True],
   ['ifThenElse', True],
@@ -40,8 +40,8 @@ for [test, shouldPass] in tests:
     if not shouldPass:
       continue
 
-  # os.system("scp a.out ubuntu16:~/.")
-  # os.system(f"ssh ubuntu16 './a.out' > .test.temp 2>&1")
+  # os.system(f"scp ./example-programs/{test}.out ubuntu16:~/.")
+  # os.system(f"ssh ubuntu16 './{test}.out' > .test.temp 2>&1")
   os.system(f"./example-programs/{test}.out > .test.temp 2>&1")
   comp = filecmp.cmp('.test.temp', f"./example-programs/outputs/{test}")
   if (not comp):

@@ -9,7 +9,10 @@ public:
   Def();
   ~Def();
   virtual DefType getDefType() const = 0;
+  virtual std::string getId() const = 0;
   // virtual class llvm::Value *codegen is overridden 
+protected:
+  std::string id;
 };
 
 

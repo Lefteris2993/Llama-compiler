@@ -8,7 +8,9 @@ ImmutableDefVar::ImmutableDefVar(
   std::string i,
   Expr *e, 
   Type *t
-): id(i), expr(e), type(t) {}
+): expr(e), type(t) {
+  this->id = i;
+}
 
 ImmutableDefVar::~ImmutableDefVar() { delete expr; delete type; }
 
@@ -20,8 +22,13 @@ void ImmutableDefVar::printOn(std::ostream &out) const {
   out << ")";
 }
 
+std::string ImmutableDefVar::getId() const { return id; }
+
 void ImmutableDefVar::sem() {
-  VarSymbolEntry *v = symbolTable->newVariable(id, type, lineno);
+  VarSymbolEntry *v;
+  v = symbolTable->lookupEntry<VarSymbolEntry>(id, false, lineno);
+  if (v == nullptr)
+    v = symbolTable->newVariable(id, type, lineno);
 
   expr->sem();
   if (type != nullptr) {
@@ -34,7 +41,6 @@ void ImmutableDefVar::sem() {
 
 llvm::Value* ImmutableDefVar::codegen() {
   llvm::Value *v = expr->codegen();
-  LLVMValueStore->newLLVMValue(id, v);
 
   return v;
 }

@@ -7,8 +7,9 @@ MutableArrayDef::MutableArrayDef(
   std::string i, 
   ExprBlock *b, 
   Type *t
-): id(i), block(b) {
+): block(b) {
   type = new ArrayType(t, b->getBlockSize());
+  this->id = i;
 }
 
 MutableArrayDef::~MutableArrayDef() { delete block; delete type; }
@@ -20,6 +21,8 @@ void MutableArrayDef::printOn(std::ostream &out) const {
   if (type != nullptr) out << "," << *type;
   out << ")";
 }
+
+std::string MutableArrayDef::getId() const { return id; }
 
 void MutableArrayDef::sem() {
   symbolTable->newVariable(id, type, lineno);
@@ -71,8 +74,6 @@ llvm::Value* MutableArrayDef::codegen() {
     Builder.CreateStore(val, arrayDims);
     count++;
   }
-
-  LLVMValueStore->newLLVMValue(id, arrayV);
 
   return arrayV;
 }
