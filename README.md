@@ -1,5 +1,6 @@
 # Llama-compiler
 Llama compiler for ece ntua compilers class 2021
+https://courses.softlab.ntua.gr/compilers/2021a/llama2021.pdf
 
 ## Requirements
 
